@@ -128,7 +128,7 @@ export function Dashboard({ pets, initialPetDetails, userEmail }: DashboardProps
             >
               <PanelRight className="h-4 w-4" />
             </SheetTrigger>
-            <SheetContent side="right" className="w-[340px] overflow-y-auto sm:w-[400px] sm:max-w-[400px]">
+            <SheetContent side="right" className="!w-full overflow-y-auto sm:!w-[420px] sm:!max-w-[420px]">
               <SheetHeader>
                 <SheetTitle>{pet?.name ?? "Pet Info"}</SheetTitle>
               </SheetHeader>
@@ -160,16 +160,16 @@ export function Dashboard({ pets, initialPetDetails, userEmail }: DashboardProps
             </span>
           </span>
           <span className="text-muted-foreground">·</span>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
-              {dailySteps.toLocaleString()} / {stepGoal.toLocaleString()}
-            </span>
-            <div className="h-1.5 w-16 rounded-full bg-muted">
+          <div className="flex flex-col gap-0.5">
+            <div className="h-1.5 w-20 rounded-full bg-muted">
               <div
                 className="h-full rounded-full bg-foreground transition-all"
                 style={{ width: `${stepPercent}%` }}
               />
             </div>
+            <span className="text-[10px] text-muted-foreground">
+              {dailySteps.toLocaleString()} / {stepGoal.toLocaleString()}
+            </span>
           </div>
         </div>
       )}
