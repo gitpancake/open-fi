@@ -108,7 +108,7 @@ export function Dashboard({ pets, bases, initialPetDetails, userEmail }: Dashboa
   }
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-dvh flex-col bg-background">
       {/* Header */}
       <header className="flex items-center justify-between border-b border-border/50 px-4 py-3 lg:px-6">
         <div className="flex items-center gap-3">
