@@ -18,6 +18,7 @@ app.use(
 app.route("/auth", auth);
 app.route("/pets", pets);
 
+app.get("/", (c) => c.redirect("/reference"));
 app.get("/health", (c) => c.json({ status: "ok" }));
 
 // OpenAPI spec
