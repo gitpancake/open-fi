@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
+import { MapPin } from "lucide-react";
 import type { FiOngoingActivity } from "~/types/fi";
 
 interface LocationWidgetProps {
@@ -23,12 +24,11 @@ export function LocationWidget({ activity }: LocationWidgetProps) {
   }
 
   const isWalking = activity.__typename === "OngoingWalk";
-  const isResting = activity.__typename === "OngoingRest";
 
   let lat: number | null = null;
   let lng: number | null = null;
 
-  if (isResting && activity.position) {
+  if (activity.__typename === "OngoingRest" && activity.position) {
     lat = activity.position.latitude;
     lng = activity.position.longitude;
   } else if (isWalking && activity.positions?.length) {
@@ -56,7 +56,7 @@ export function LocationWidget({ activity }: LocationWidgetProps) {
       </CardHeader>
       <CardContent className="space-y-3">
         {mapSrc && (
-          <div className="overflow-hidden rounded-lg">
+          <div className="overflow-hidden rounded-xl ring-1 ring-border">
             <iframe
               src={mapSrc}
               className="h-[180px] w-full border-0"
@@ -67,18 +67,24 @@ export function LocationWidget({ activity }: LocationWidgetProps) {
 
         <div className="space-y-1">
           {activity.place?.name && (
-            <p className="text-sm font-medium">{activity.place.name}</p>
+            <div className="flex items-center gap-1.5 text-sm font-medium">
+              <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+              {activity.place.name}
+            </div>
           )}
           {activity.place?.address && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground pl-5">
               {activity.place.address}
             </p>
           )}
           {activity.areaName && !activity.place?.name && (
-            <p className="text-sm font-medium">{activity.areaName}</p>
+            <div className="flex items-center gap-1.5 text-sm font-medium">
+              <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+              {activity.areaName}
+            </div>
           )}
           {isWalking && activity.distance !== undefined && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground pl-5">
               {(activity.distance * 0.000621371).toFixed(2)} mi walked
             </p>
           )}

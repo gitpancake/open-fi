@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Card, CardContent } from "~/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
 import type { FiPet } from "~/types/fi";
@@ -18,25 +18,20 @@ export function PetProfileCard({ pet }: PetProfileCardProps) {
     connectionType === "ConnectedToCellular";
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          Profile
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex items-start gap-4">
-        <Avatar className="h-16 w-16 rounded-xl">
-          {photoUrl && <AvatarImage src={photoUrl} alt={pet.name} />}
-          <AvatarFallback className="rounded-xl text-lg">
+    <Card className="overflow-hidden">
+      <CardContent className="flex items-center gap-4 pt-5">
+        <Avatar className="h-20 w-20 rounded-2xl ring-2 ring-border">
+          {photoUrl && <AvatarImage src={photoUrl} alt={pet.name} className="object-cover" />}
+          <AvatarFallback className="rounded-2xl text-xl font-semibold">
             {pet.name[0]}
           </AvatarFallback>
         </Avatar>
-        <div className="flex-1 space-y-1">
+        <div className="flex-1 space-y-1.5">
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold">{pet.name}</h3>
+            <h3 className="text-lg font-semibold leading-none">{pet.name}</h3>
             <Badge
               variant={isConnected ? "default" : "secondary"}
-              className="text-xs"
+              className="text-[10px] px-1.5 py-0"
             >
               {isConnected ? "Online" : "Offline"}
             </Badge>
@@ -45,10 +40,10 @@ export function PetProfileCard({ pet }: PetProfileCardProps) {
             {pet.breed?.name} · {pet.gender === "MALE" ? "Male" : "Female"}
           </p>
           <p className="text-sm text-muted-foreground">
-            {pet.weight}lb · {age} years old
+            {pet.weight}lb · {age}y
           </p>
           {pet.homeCityState && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground/70">
               {pet.homeCityState}
             </p>
           )}

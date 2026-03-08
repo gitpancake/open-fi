@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
+import { Signal, Zap } from "lucide-react";
 import type { FiConnectionState, FiLedColor, FiOperationParams } from "~/types/fi";
 
 interface DeviceStatusWidgetProps {
@@ -17,7 +18,7 @@ interface DeviceStatusWidgetProps {
 function getConnectionLabel(type: string): string {
   switch (type) {
     case "ConnectedToUser":
-      return "Connected (Bluetooth)";
+      return "Bluetooth";
     case "ConnectedToBase":
       return "Charging";
     case "ConnectedToCellular":
@@ -63,12 +64,13 @@ export function DeviceStatusWidget({ device }: DeviceStatusWidgetProps) {
                 isConnected ? "bg-green-500" : "bg-muted-foreground"
               }`}
             />
-            <span className="text-sm">
+            <span className="text-sm font-medium">
               {getConnectionLabel(connType)}
             </span>
           </div>
           {isCharging && (
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="gap-1 text-xs">
+              <Zap className="h-3 w-3" />
               Charging
             </Badge>
           )}
@@ -76,8 +78,11 @@ export function DeviceStatusWidget({ device }: DeviceStatusWidgetProps) {
 
         {device.lastConnectionState.signalStrengthPercent !== undefined && (
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Signal</span>
-            <span>{device.lastConnectionState.signalStrengthPercent}%</span>
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <Signal className="h-3.5 w-3.5" />
+              Signal
+            </span>
+            <span className="font-medium">{device.lastConnectionState.signalStrengthPercent}%</span>
           </div>
         )}
 
@@ -85,20 +90,20 @@ export function DeviceStatusWidget({ device }: DeviceStatusWidgetProps) {
           <span className="text-muted-foreground">LED</span>
           <div className="flex items-center gap-2">
             <div
-              className="h-3 w-3 rounded-full border"
+              className="h-3 w-3 rounded-full ring-1 ring-border"
               style={{
                 backgroundColor: device.ledColor?.hexCode
                   ? `#${device.ledColor.hexCode}`
                   : undefined,
               }}
             />
-            <span>{device.ledColor?.name ?? "Off"}</span>
+            <span className="font-medium">{device.ledColor?.name ?? "Off"}</span>
           </div>
         </div>
 
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Last seen</span>
-          <span>{timeAgo(device.lastConnectionState.date)}</span>
+          <span className="font-medium">{timeAgo(device.lastConnectionState.date)}</span>
         </div>
 
         {isLost && (
