@@ -1,11 +1,30 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import type { UIMessage } from "ai";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "~/components/ui/button";
 import { ChatMessage } from "~/components/chat-message";
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+
+const STORAGE_KEY = "open-fi-chat-history";
+
+function loadMessages(): UIMessage[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as UIMessage[];
+  } catch {
+    return [];
+  }
+}
+
+function saveMessages(messages: UIMessage[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  } catch {}
+}
 
 const SUGGESTIONS = [
   "Where is my dog?",
@@ -15,12 +34,35 @@ const SUGGESTIONS = [
 ];
 
 export function ChatPanel() {
-  const { messages, sendMessage, status } = useChat();
+  const { messages, setMessages, sendMessage, status } = useChat();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const restoredRef = useRef(false);
   const isLoading = status === "submitted" || status === "streaming";
+
+  // Restore chat history from localStorage on mount
+  useEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+    const saved = loadMessages();
+    if (saved.length > 0) setMessages(saved);
+  }, [setMessages]);
+
+  // Persist messages after streaming completes
+  useEffect(() => {
+    if (!restoredRef.current) return;
+    if (status === "streaming" || status === "submitted") return;
+    if (messages.length > 0) {
+      saveMessages(messages);
+    }
+  }, [messages, status]);
+
+  function handleClearHistory() {
+    setMessages([]);
+    localStorage.removeItem(STORAGE_KEY);
+  }
 
   const scrollToBottom = useCallback(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -140,6 +182,18 @@ export function ChatPanel() {
             rows={1}
             className="flex-1 resize-none bg-transparent px-2 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           />
+          {messages.length > 0 && !isLoading && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={handleClearHistory}
+              title="Clear chat history"
+              className="h-8 w-8 shrink-0 rounded-xl text-muted-foreground hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
           <Button
             type="submit"
             size="icon"
