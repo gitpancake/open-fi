@@ -49,9 +49,9 @@ export function Dashboard({ pets, initialPetDetails, userEmail }: DashboardProps
       </header>
 
       {/* Main content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* Chat panel - left side */}
-        <div className="flex flex-1 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col">
           <ChatPanel />
         </div>
 
@@ -92,7 +92,7 @@ export function Dashboard({ pets, initialPetDetails, userEmail }: DashboardProps
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: 0.3 }}
               >
-                <DeviceStatusWidget device={initialPetDetails.device} />
+                <DeviceStatusWidget device={initialPetDetails.device} petId={pet.id} />
               </motion.div>
             </>
           )}

@@ -8,7 +8,7 @@ Next.js frontend for open-fi. Features an AI chat interface powered by Claude th
 - **Pet Profile** — Photo, name, breed, weight, age
 - **Activity Widget** — Daily/weekly/monthly step counts with goal tracking
 - **Location Widget** — Current location on OpenStreetMap
-- **Device Status** — Collar connection, LED color, signal strength
+- **Device Status** — Collar connection, LED color picker, signal strength
 
 ## Usage
 
@@ -56,6 +56,7 @@ FI_API_URL=http://localhost:3001
 | `get_pet_sleep` | Sleep and nap durations |
 | `get_pet_details` | Comprehensive overview (activity + sleep + location + device) |
 | `get_device_status` | Collar battery, connection, LED, firmware |
+| `set_led_color` | Change the collar LED color by name |
 
 ## Layout
 
@@ -99,7 +100,8 @@ src/
 │   └── api/
 │       ├── auth/login/route.ts   # Login via fi-open-api
 │       ├── auth/logout/route.ts  # Clear session
-│       └── chat/route.ts         # AI streaming chat
+│       ├── chat/route.ts         # AI streaming chat
+│       └── device/[petId]/led/   # PUT — change collar LED color
 ├── components/
 │   ├── dashboard.tsx             # Two-panel layout
 │   ├── chat-panel.tsx            # Chat UI (useChat hook)

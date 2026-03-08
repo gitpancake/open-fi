@@ -89,3 +89,14 @@ export async function apiGetPetDevice<T>(
 ): Promise<T> {
   return apiFetch<T>(`/pets/${petId}/device`, creds);
 }
+
+export async function apiSetPetLedColor<T>(
+  creds: FiCredentials,
+  petId: string,
+  ledColorCode: number
+): Promise<T> {
+  return apiFetch<T>(`/pets/${petId}/device/led`, creds, {
+    method: "PUT",
+    body: JSON.stringify({ ledColorCode }),
+  });
+}

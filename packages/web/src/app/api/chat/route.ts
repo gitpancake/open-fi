@@ -1,4 +1,4 @@
-import { streamText, convertToModelMessages } from "ai";
+import { streamText, convertToModelMessages, stepCountIs } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
@@ -53,6 +53,7 @@ Guidelines:
 - You can call multiple tools if needed to answer a comprehensive question.`,
     messages: await convertToModelMessages(messages),
     tools,
+    stopWhen: stepCountIs(5),
   });
 
   return result.toUIMessageStreamResponse();

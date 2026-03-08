@@ -7,6 +7,7 @@ import {
   getPetSleep,
   getPetAllInfo,
   getPetDeviceDetails,
+  setDeviceLed,
 } from "../client.js";
 
 type Env = {
@@ -64,6 +65,20 @@ pets.get("/:id/device", async (c) => {
   const creds = c.get("creds");
   const pet = await getPetDeviceDetails(creds, c.req.param("id"));
   return c.json(pet);
+});
+
+pets.put("/:id/device/led", async (c) => {
+  const creds = c.get("creds");
+  const { ledColorCode } = await c.req.json<{ ledColorCode: number }>();
+
+  // Get the pet's device to find the moduleId
+  const pet = await getPetDeviceDetails(creds, c.req.param("id"));
+  if (!pet.device) {
+    return c.json({ error: "No device found for this pet" }, 404);
+  }
+
+  const result = await setDeviceLed(creds, pet.device.moduleId, ledColorCode);
+  return c.json(result);
 });
 
 export default pets;

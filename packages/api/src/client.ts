@@ -7,6 +7,7 @@ import {
   buildPetRestQuery,
   buildPetAllInfoQuery,
   buildPetDeviceQuery,
+  buildSetLedMutation,
 } from "./queries.js";
 import type {
   HouseholdsResponse,
@@ -27,15 +28,19 @@ export interface FiCredentials {
 
 async function fiQuery<T>(
   creds: FiCredentials,
-  queryString: string
+  queryString: string,
+  variables?: Record<string, unknown>
 ): Promise<T> {
+  const body: Record<string, unknown> = { query: queryString };
+  if (variables) body.variables = variables;
+
   const res = await fetch(GRAPHQL_URL, {
     method: "POST",
     headers: {
       "content-type": "application/json",
       cookie: creds.fiCookies,
     },
-    body: JSON.stringify({ query: queryString }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
@@ -87,4 +92,18 @@ export async function getPetDeviceDetails(creds: FiCredentials, petId: string) {
   const query = buildPetDeviceQuery(petId);
   const res = await fiQuery<{ data: { pet: FiPet } }>(creds, query);
   return res.data.pet;
+}
+
+export async function setDeviceLed(
+  creds: FiCredentials,
+  moduleId: string,
+  ledColorCode: number
+) {
+  const query = buildSetLedMutation();
+  const res = await fiQuery<{ data: { setDeviceLed: FiPet["device"] } }>(
+    creds,
+    query,
+    { moduleId, ledColorCode }
+  );
+  return res.data.setDeviceLed;
 }

@@ -7,6 +7,7 @@ import {
   apiGetPetSleep,
   apiGetPetDetails,
   apiGetPetDevice,
+  apiSetPetLedColor,
   type FiCredentials,
 } from "~/lib/api-client";
 
@@ -67,6 +68,12 @@ interface PetAllInfo {
   monthlySleepStat?: { restSummaries?: Array<{ data?: { sleepAmounts?: Array<{ type: string; duration: number }> } }> };
 }
 
+interface LedColor {
+  ledColorCode: number;
+  hexCode: string;
+  name: string;
+}
+
 interface PetDevice {
   device: {
     id: string;
@@ -74,7 +81,8 @@ interface PetDevice {
     info: string;
     lastConnectionState: { __typename: string; date: string; signalStrengthPercent?: number };
     operationParams: { mode: string; ledEnabled: boolean };
-    ledColor?: { name: string; hexCode: string };
+    ledColor?: LedColor;
+    availableLedColors: LedColor[];
     nextLocationUpdateExpectedBy: string;
   } | null;
 }
@@ -275,7 +283,40 @@ export function createFiTools(creds: FiCredentials) {
           ledEnabled: d.operationParams.ledEnabled,
           ledColor: d.ledColor?.name,
           ledHexCode: d.ledColor?.hexCode,
+          availableColors: d.availableLedColors.map((c) => c.name),
           nextLocationUpdate: d.nextLocationUpdateExpectedBy,
+        };
+      },
+    }),
+
+    set_led_color: tool({
+      description:
+        "Change the LED color on a pet's Fi collar. Use when the user asks to change their dog's collar color/light. Available colors can be found via get_device_status.",
+      inputSchema: z.object({
+        petId: z.string().describe("The pet ID whose collar LED to change"),
+        colorName: z.string().describe("The color name to set (e.g. 'Red', 'Blue', 'Green'). Must match one of the available colors."),
+      }),
+      execute: async ({ petId, colorName }) => {
+        const pet = await apiGetPetDevice<PetDevice>(creds, petId);
+        if (!pet.device) return { error: "No device found for this pet" };
+
+        const available = pet.device.availableLedColors;
+        const match = available.find(
+          (c) => c.name.toLowerCase() === colorName.toLowerCase()
+        );
+
+        if (!match) {
+          return {
+            error: `Color "${colorName}" not available. Available colors: ${available.map((c) => c.name).join(", ")}`,
+          };
+        }
+
+        await apiSetPetLedColor(creds, petId, match.ledColorCode);
+        return {
+          success: true,
+          message: `LED color changed to ${match.name}`,
+          color: match.name,
+          hexCode: match.hexCode,
         };
       },
     }),

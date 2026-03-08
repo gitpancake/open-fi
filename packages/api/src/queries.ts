@@ -69,7 +69,7 @@ export const QUERY_CURRENT_USER_FULL_DETAIL =
   "query {  currentUser {    ...UserFullDetails  }}";
 
 export const QUERY_PET_ACTIVE_DETAILS =
-  `query {  pet (id: "${VAR_PET_ID}") { ongoingActivity { __typename ...OngoingActivityDetails } dailyStepStat: currentActivitySummary (period: DAILY) { ...ActivitySummaryDetails } weeklyStepStat: currentActivitySummary (period: WEEKLY) { ...ActivitySummaryDetails } monthlyStepStat: currentActivitySummary (period: MONTHLY) { ...ActivitySummaryDetails } device { __typename moduleId info operationParams {    __typename    ...OperationParamsDetails  }  nextLocationUpdateExpectedBy  lastConnectionState {    __typename    ...ConnectionStateDetails  }  ledColor {    __typename    ...LedColorDetails }} dailySleepStat: restSummaryFeed(cursor: null, period: DAILY, limit: 1) {      __typename      restSummaries {        __typename        ...RestSummaryDetails }} monthlySleepStat: restSummaryFeed(cursor: null, period: MONTHLY, limit: 1) {      __typename      restSummaries {        __typename        ...RestSummaryDetails }} }}`;
+  `query {  pet (id: "${VAR_PET_ID}") { ongoingActivity { __typename ...OngoingActivityDetails } dailyStepStat: currentActivitySummary (period: DAILY) { ...ActivitySummaryDetails } weeklyStepStat: currentActivitySummary (period: WEEKLY) { ...ActivitySummaryDetails } monthlyStepStat: currentActivitySummary (period: MONTHLY) { ...ActivitySummaryDetails } device { __typename moduleId info operationParams {    __typename    ...OperationParamsDetails  }  nextLocationUpdateExpectedBy  lastConnectionState {    __typename    ...ConnectionStateDetails  }  ledColor {    __typename    ...LedColorDetails }  availableLedColors {    __typename    ...LedColorDetails }} dailySleepStat: restSummaryFeed(cursor: null, period: DAILY, limit: 1) {      __typename      restSummaries {        __typename        ...RestSummaryDetails }} monthlySleepStat: restSummaryFeed(cursor: null, period: MONTHLY, limit: 1) {      __typename      restSummaries {        __typename        ...RestSummaryDetails }} }}`;
 
 export const QUERY_PET_CURRENT_LOCATION =
   `query {  pet (id: "${VAR_PET_ID}") {    ongoingActivity {      __typename      ...OngoingActivityDetails    }  }}`;
@@ -82,6 +82,11 @@ export const QUERY_PET_REST =
 
 export const QUERY_PET_DEVICE_DETAILS =
   `query {  pet (id: "${VAR_PET_ID}") {    __typename    ...PetProfile  }}`;
+
+// --- Mutations ---
+
+export const MUTATION_SET_DEVICE_LED =
+  "mutation SetDeviceLed($moduleId: String!, $ledColorCode: Int!) { setDeviceLed(moduleId: $moduleId, ledColorCode: $ledColorCode) { __typename ...DeviceDetails }}";
 
 // --- Query builders ---
 
@@ -155,5 +160,16 @@ export function buildPetDeviceQuery(petId: string): string {
     FRAGMENT_USER_DETAILS +
     FRAGMENT_BREED_DETAILS +
     FRAGMENT_PHOTO_DETAILS
+  );
+}
+
+export function buildSetLedMutation(): string {
+  return (
+    MUTATION_SET_DEVICE_LED +
+    FRAGMENT_DEVICE_DETAILS +
+    FRAGMENT_LED_DETAILS +
+    FRAGMENT_OPERATIONAL_DETAILS +
+    FRAGMENT_CONNECTION_STATE_DETAILS +
+    FRAGMENT_USER_DETAILS
   );
 }

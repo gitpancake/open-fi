@@ -212,6 +212,7 @@ export interface PetAllInfoResponse {
         nextLocationUpdateExpectedBy: string;
         lastConnectionState: FiConnectionState;
         ledColor: FiLedColor;
+        availableLedColors: FiLedColor[];
       };
       dailySleepStat: { restSummaries: FiRestSummary[] };
       monthlySleepStat: { restSummaries: FiRestSummary[] };
