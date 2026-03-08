@@ -10,9 +10,12 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.14.0",
+    "@hono/zod-openapi": "^1.2.2",
+    "@scalar/hono-api-reference": "^0.10.0",
     "@types/node": "^22",
     "hono": "^4.7.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "tsx": "^4.19.0"

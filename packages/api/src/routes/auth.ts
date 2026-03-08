@@ -1,10 +1,35 @@
-import { Hono } from "hono";
+import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { API_HOST, API_LOGIN } from "../queries.js";
+import { LoginBodySchema, LoginResponseSchema, ErrorSchema } from "../schemas.js";
 
-const auth = new Hono();
+const auth = new OpenAPIHono();
 
-auth.post("/login", async (c) => {
-  const { email, password } = await c.req.json();
+const loginRoute = createRoute({
+  method: "post",
+  path: "/login",
+  tags: ["Auth"],
+  summary: "Login with Fi credentials",
+  description: "Authenticate with TryFi email and password. Returns session cookies needed for all pet endpoints.",
+  request: {
+    body: {
+      content: { "application/json": { schema: LoginBodySchema } },
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      content: { "application/json": { schema: LoginResponseSchema } },
+      description: "Login successful",
+    },
+    401: {
+      content: { "application/json": { schema: ErrorSchema } },
+      description: "Invalid credentials",
+    },
+  },
+});
+
+auth.openapi(loginRoute, async (c) => {
+  const { email, password } = c.req.valid("json");
 
   const fiResponse = await fetch(API_HOST + API_LOGIN, {
     method: "POST",
@@ -16,7 +41,11 @@ auth.post("/login", async (c) => {
     return c.json({ error: "Invalid credentials" }, 401);
   }
 
-  const data = await fiResponse.json();
+  const data = (await fiResponse.json()) as {
+    userId?: string;
+    sessionId?: string;
+    error?: { message?: string };
+  };
 
   if (data.error) {
     return c.json({ error: data.error.message || "Login failed" }, 401);
@@ -28,11 +57,9 @@ auth.post("/login", async (c) => {
     .map((h: string) => h.split(";")[0])
     .join("; ");
 
-  return c.json({
-    userId: data.userId,
-    sessionId: data.sessionId,
-    fiCookies: cookiePairs,
-  });
+  return c.json(
+    { userId: data.userId!, sessionId: data.sessionId!, fiCookies: cookiePairs } as any,
+  );
 });
 
 export default auth;
