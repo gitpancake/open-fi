@@ -209,7 +209,7 @@ export function DeviceStatusWidget({ device, petId }: DeviceStatusWidgetProps) {
               Temp
             </span>
             <span className="font-medium">
-              {(temperature / 100).toFixed(1)}°C
+              {(temperature / 100).toFixed(1)}°C / {((temperature / 100) * 9 / 5 + 32).toFixed(1)}°F
             </span>
           </div>
         )}
