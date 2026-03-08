@@ -6,6 +6,7 @@ import { PetProfileCard } from "~/components/pet-profile-card";
 import { ActivityWidget } from "~/components/activity-widget";
 import { LocationWidget } from "~/components/location-widget";
 import { DeviceStatusWidget } from "~/components/device-status-widget";
+import { BaseStationsWidget } from "~/components/base-stations-widget";
 import { Button } from "~/components/ui/button";
 import {
   Sheet,
@@ -17,16 +18,17 @@ import {
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { LogOut, PanelRight } from "lucide-react";
-import type { FiPet } from "~/types/fi";
+import type { FiPet, FiBase } from "~/types/fi";
 import type { PetAllInfoResponse } from "~/types/fi";
 
 interface DashboardProps {
   pets: FiPet[];
+  bases: FiBase[];
   initialPetDetails: PetAllInfoResponse["data"]["pet"] | null;
   userEmail: string;
 }
 
-export function Dashboard({ pets, initialPetDetails, userEmail }: DashboardProps) {
+export function Dashboard({ pets, bases, initialPetDetails, userEmail }: DashboardProps) {
   const router = useRouter();
   const pet = pets[0] ?? null;
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -94,6 +96,11 @@ export function Dashboard({ pets, initialPetDetails, userEmail }: DashboardProps
                 <DeviceStatusWidget device={deviceWithColors} petId={pet.id} />
               )}
             </Wrapper>
+            {bases.length > 0 && (
+              <Wrapper {...getProps(0.4)}>
+                <BaseStationsWidget bases={bases} />
+              </Wrapper>
+            )}
           </>
         )}
       </>

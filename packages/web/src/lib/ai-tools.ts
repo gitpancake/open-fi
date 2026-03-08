@@ -8,6 +8,7 @@ import {
   apiGetPetDetails,
   apiGetPetDevice,
   apiSetPetLedColor,
+  apiSetLostDogMode,
   type FiCredentials,
 } from "~/lib/api-client";
 
@@ -78,9 +79,9 @@ interface PetDevice {
   device: {
     id: string;
     moduleId: string;
-    info: string;
+    info: { buildId: string; batteryPercent: number; isCharging?: boolean; temperature?: number };
     lastConnectionState: { __typename: string; date: string; signalStrengthPercent?: number };
-    operationParams: { mode: string; ledEnabled: boolean };
+    operationParams: { mode: string; ledEnabled: boolean; ledOffAt: string | null };
     ledColor?: LedColor;
     availableLedColors: LedColor[];
     nextLocationUpdateExpectedBy: string;
@@ -96,7 +97,8 @@ export function createFiTools(creds: FiCredentials) {
         "List all pets in the user's household with their basic info (name, breed, gender, weight, age, photo). Use this when the user asks about their pets or you need to find a pet ID.",
       inputSchema: z.object({}),
       execute: async () => {
-        const pets = await apiGetPets<PetBasic[]>(creds);
+        const data = await apiGetPets<{ pets: PetBasic[] }>(creds);
+        const pets = data.pets;
         return pets.map((p) => ({
           id: p.id,
           name: p.name,
@@ -275,11 +277,15 @@ export function createFiTools(creds: FiCredentials) {
         return {
           deviceId: d.id,
           moduleId: d.moduleId,
-          firmwareInfo: d.info,
+          buildId: d.info?.buildId,
+          batteryPercent: d.info?.batteryPercent,
+          isCharging: d.info?.isCharging,
+          temperatureCelsius: d.info?.temperature != null ? d.info.temperature / 100 : null,
           connectionState: d.lastConnectionState.__typename,
           connectionDate: d.lastConnectionState.date,
           signalStrength: d.lastConnectionState.signalStrengthPercent,
           mode: d.operationParams.mode,
+          isLostMode: d.operationParams.mode === "LOST_DOG",
           ledEnabled: d.operationParams.ledEnabled,
           ledColor: d.ledColor?.name,
           ledHexCode: d.ledColor?.hexCode,
@@ -317,6 +323,25 @@ export function createFiTools(creds: FiCredentials) {
           message: `LED color changed to ${match.name}`,
           color: match.name,
           hexCode: match.hexCode,
+        };
+      },
+    }),
+
+    set_lost_mode: tool({
+      description:
+        "Toggle Lost Dog Mode on a pet's Fi collar. When enabled, GPS tracking frequency is increased to help find the dog. Use when the user says their dog is lost or wants to activate/deactivate lost mode.",
+      inputSchema: z.object({
+        petId: z.string().describe("The pet ID to toggle lost mode for"),
+        isLost: z.boolean().describe("true to activate lost mode, false to deactivate"),
+      }),
+      execute: async ({ petId, isLost }) => {
+        await apiSetLostDogMode(creds, petId, isLost);
+        return {
+          success: true,
+          message: isLost
+            ? "Lost Dog Mode activated — GPS tracking frequency increased"
+            : "Lost Dog Mode deactivated — returned to normal tracking",
+          mode: isLost ? "LOST_DOG" : "NORMAL",
         };
       },
     }),

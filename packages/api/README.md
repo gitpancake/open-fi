@@ -18,14 +18,15 @@ All pet endpoints require authentication headers:
 
 | Method | Path | Response |
 |---|---|---|
-| GET | `/pets` | Array of all pets with device info |
+| GET | `/pets` | `{ pets, bases }` — All pets with device info + base stations |
 | GET | `/pets/:id/location` | Current location/activity |
 | GET | `/pets/:id/activity` | Daily/weekly/monthly step counts + distance |
 | GET | `/pets/:id/sleep` | Daily/weekly/monthly sleep/nap durations |
 | GET | `/pets/:id/details` | Comprehensive pet info (activity, sleep, location, device) |
-| GET | `/pets/:id/device` | Collar status (connection, LED, firmware) |
+| GET | `/pets/:id/device` | Collar status (connection, battery, LED, firmware) |
 | PUT | `/pets/:id/device/led` | `{ ledColorCode }` — Change collar LED color |
 | PUT | `/pets/:id/device/led-toggle` | `{ ledEnabled }` — Turn collar LED on/off |
+| PUT | `/pets/:id/device/lost-mode` | `{ isLost }` — Toggle Lost Dog Mode (increases GPS frequency) |
 
 ### Health
 
@@ -82,4 +83,4 @@ The API is stateless — it doesn't store sessions or credentials. Authenticatio
 
 ## CORS
 
-Configured to allow requests from `http://localhost:3000` (the web frontend). Modify `src/index.ts` to change allowed origins.
+Configured to allow any origin (dynamic CORS). The API uses `process.env.PORT` for Railway deployment compatibility.

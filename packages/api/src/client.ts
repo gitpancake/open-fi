@@ -65,6 +65,15 @@ export async function getAllPets(creds: FiCredentials): Promise<FiPet[]> {
   );
 }
 
+export async function getPetsAndBases(creds: FiCredentials) {
+  const user = await getHouseholds(creds);
+  const pets = user.userHouseholds.flatMap((h) =>
+    h.household.pets.filter((p) => p.device !== null)
+  );
+  const bases = user.userHouseholds.flatMap((h) => h.household.bases ?? []);
+  return { pets, bases };
+}
+
 export async function getPetLocation(creds: FiCredentials, petId: string) {
   const query = buildPetLocationQuery(petId);
   const res = await fiQuery<PetLocationResponse>(creds, query);
@@ -119,6 +128,21 @@ export async function setDeviceLedEnabled(
     creds,
     query,
     { input: { moduleId, ledEnabled } }
+  );
+  return res.data.updateDeviceOperationParams;
+}
+
+export async function setLostDogMode(
+  creds: FiCredentials,
+  moduleId: string,
+  isLost: boolean
+) {
+  const query = buildUpdateDeviceOpsMutation();
+  const mode = isLost ? "LOST_DOG" : "NORMAL";
+  const res = await fiQuery<{ data: { updateDeviceOperationParams: FiPet["device"] } }>(
+    creds,
+    query,
+    { input: { moduleId, mode } }
   );
   return res.data.updateDeviceOperationParams;
 }

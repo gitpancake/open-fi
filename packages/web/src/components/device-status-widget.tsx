@@ -5,15 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { Switch } from "~/components/ui/switch";
 import { ColorSwatch } from "~/components/ui/color-swatch";
-import { Signal, Check, Loader2 } from "lucide-react";
+import { Signal, Check, Loader2, Battery, BatteryCharging, Thermometer, AlertTriangle } from "lucide-react";
 import { cn } from "~/lib/utils";
-import type { FiConnectionState, FiLedColor, FiOperationParams } from "~/types/fi";
+import type { FiConnectionState, FiLedColor, FiOperationParams, FiDeviceInfo } from "~/types/fi";
 
 interface DeviceStatusWidgetProps {
   device: {
     __typename: string;
     moduleId: string;
-    info: string;
+    info: FiDeviceInfo;
     operationParams: FiOperationParams;
     nextLocationUpdateExpectedBy: string;
     lastConnectionState: FiConnectionState;
@@ -48,19 +48,41 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+function isLedActuallyOn(ledEnabled: boolean, ledOffAt: string | null): boolean {
+  if (!ledEnabled) return false;
+  if (!ledOffAt) return false;
+  return new Date(ledOffAt) > new Date();
+}
+
+function getBatteryColor(percent: number): string {
+  if (percent > 50) return "text-green-500";
+  if (percent > 20) return "text-yellow-500";
+  return "text-red-500";
+}
+
 export function DeviceStatusWidget({ device, petId }: DeviceStatusWidgetProps) {
   const connType = device.lastConnectionState.__typename;
   const isConnected =
     connType === "ConnectedToUser" ||
     connType === "ConnectedToBase" ||
     connType === "ConnectedToCellular";
-  const isLost = device.operationParams.mode === "LOST_DOG";
+
+  const actualLedOn = isLedActuallyOn(
+    device.operationParams.ledEnabled,
+    device.operationParams.ledOffAt
+  );
 
   const [activeColor, setActiveColor] = useState(device.ledColor);
-  const [ledEnabled, setLedEnabled] = useState(device.operationParams.ledEnabled);
+  const [ledEnabled, setLedEnabled] = useState(actualLedOn);
+  const [isLost, setIsLost] = useState(device.operationParams.mode === "LOST_DOG");
   const [changingCode, setChangingCode] = useState<number | null>(null);
   const [togglingLed, setTogglingLed] = useState(false);
+  const [togglingLost, setTogglingLost] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const batteryPercent = device.info?.batteryPercent;
+  const isCharging = device.info?.isCharging;
+  const temperature = device.info?.temperature;
 
   async function handleColorChange(color: FiLedColor) {
     if (color.ledColorCode === activeColor?.ledColorCode || changingCode !== null) return;
@@ -108,6 +130,29 @@ export function DeviceStatusWidget({ device, petId }: DeviceStatusWidgetProps) {
     }
   }
 
+  async function handleToggleLost(lost: boolean) {
+    if (togglingLost) return;
+    setTogglingLost(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/device/${petId}/lost-mode`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isLost: lost }),
+      });
+      if (res.ok) {
+        setIsLost(lost);
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setError(body.error ?? "Failed to toggle lost mode");
+      }
+    } catch {
+      setError("Network error");
+    } finally {
+      setTogglingLost(false);
+    }
+  }
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -136,6 +181,36 @@ export function DeviceStatusWidget({ device, petId }: DeviceStatusWidgetProps) {
               Signal
             </span>
             <span className="font-medium">{device.lastConnectionState.signalStrengthPercent}%</span>
+          </div>
+        )}
+
+        {/* Battery */}
+        {batteryPercent != null && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              {isCharging ? (
+                <BatteryCharging className="h-3.5 w-3.5" />
+              ) : (
+                <Battery className="h-3.5 w-3.5" />
+              )}
+              Battery
+            </span>
+            <span className={cn("font-medium", getBatteryColor(batteryPercent))}>
+              {batteryPercent}%{isCharging ? " · Charging" : ""}
+            </span>
+          </div>
+        )}
+
+        {/* Temperature */}
+        {temperature != null && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <Thermometer className="h-3.5 w-3.5" />
+              Temp
+            </span>
+            <span className="font-medium">
+              {(temperature / 100).toFixed(1)}°C
+            </span>
           </div>
         )}
 
@@ -199,20 +274,40 @@ export function DeviceStatusWidget({ device, petId }: DeviceStatusWidgetProps) {
               })}
             </div>
           ) : null}
-          {error && (
-            <p className="text-xs text-destructive">{error}</p>
-          )}
         </div>
+
+        {/* Lost Dog Mode */}
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Lost Mode
+            </span>
+            <Switch
+              checked={isLost}
+              onCheckedChange={handleToggleLost}
+              disabled={togglingLost}
+              className="scale-75"
+            />
+          </div>
+          <span className={cn("font-medium", isLost && "text-destructive")}>
+            {togglingLost ? "..." : isLost ? "Active" : "Off"}
+          </span>
+        </div>
+
+        {isLost && (
+          <Badge variant="destructive" className="w-full justify-center">
+            Lost Dog Mode — GPS tracking increased
+          </Badge>
+        )}
 
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Last seen</span>
           <span className="font-medium">{timeAgo(device.lastConnectionState.date)}</span>
         </div>
 
-        {isLost && (
-          <Badge variant="destructive" className="w-full justify-center">
-            Lost Dog Mode Active
-          </Badge>
+        {error && (
+          <p className="text-xs text-destructive">{error}</p>
         )}
       </CardContent>
     </Card>

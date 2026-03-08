@@ -8,7 +8,10 @@ Next.js frontend for open-fi. Features an AI chat interface powered by Claude th
 - **Pet Profile** — Photo, name, breed, weight, age
 - **Activity Widget** — Daily/weekly/monthly step counts with goal tracking
 - **Location Widget** — Current location on OpenStreetMap
-- **Device Status** — Collar connection, LED on/off toggle, color picker, signal strength
+- **Device Status** — Battery level, collar connection, LED on/off toggle, color picker, signal strength, temperature
+- **Lost Dog Mode** — Toggle to increase GPS tracking frequency when your dog is lost
+- **Base Stations** — Wi-Fi base station status (online/offline, network name)
+- **Chat History** — Persisted in localStorage across page reloads
 
 ## Usage
 
@@ -55,8 +58,9 @@ FI_API_URL=http://localhost:3001
 | `get_pet_activity` | Step counts and distance (daily/weekly/monthly) |
 | `get_pet_sleep` | Sleep and nap durations |
 | `get_pet_details` | Comprehensive overview (activity + sleep + location + device) |
-| `get_device_status` | Collar battery, connection, LED, firmware |
+| `get_device_status` | Collar battery, connection, LED, firmware, temperature |
 | `set_led_color` | Change the collar LED color by name |
+| `set_lost_mode` | Toggle Lost Dog Mode on/off |
 
 ## Layout
 
@@ -101,7 +105,10 @@ src/
 │       ├── auth/login/route.ts   # Login via fi-open-api
 │       ├── auth/logout/route.ts  # Clear session
 │       ├── chat/route.ts         # AI streaming chat
-│       └── device/[petId]/led/   # PUT — change collar LED color
+│       └── device/[petId]/
+│           ├── led/             # PUT — change collar LED color
+│           ├── led-toggle/      # PUT — toggle LED on/off
+│           └── lost-mode/       # PUT — toggle Lost Dog Mode
 ├── components/
 │   ├── dashboard.tsx             # Two-panel layout
 │   ├── chat-panel.tsx            # Chat UI (useChat hook)
@@ -109,7 +116,8 @@ src/
 │   ├── pet-profile-card.tsx      # Dog profile
 │   ├── activity-widget.tsx       # Step stats
 │   ├── location-widget.tsx       # Map embed
-│   ├── device-status-widget.tsx  # Collar status
+│   ├── device-status-widget.tsx  # Collar status + battery + lost mode
+│   ├── base-stations-widget.tsx  # Wi-Fi base stations
 │   ├── login-form.tsx            # Login form
 │   └── ui/                       # shadcn primitives
 ├── lib/

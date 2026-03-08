@@ -39,11 +39,19 @@ export interface FiOperationParams {
   ledOffAt: string | null;
 }
 
+export interface FiDeviceInfo {
+  __typename: string;
+  buildId: string;
+  batteryPercent: number;
+  isCharging?: boolean;
+  temperature?: number;
+}
+
 export interface FiDevice {
   __typename: string;
   id: string;
   moduleId: string;
-  info: string;
+  info: FiDeviceInfo;
   nextLocationUpdateExpectedBy: string;
   operationParams: FiOperationParams;
   lastConnectionState: FiConnectionState;
@@ -207,7 +215,7 @@ export interface PetAllInfoResponse {
       device: {
         __typename: string;
         moduleId: string;
-        info: string;
+        info: FiDeviceInfo;
         operationParams: FiOperationParams;
         nextLocationUpdateExpectedBy: string;
         lastConnectionState: FiConnectionState;

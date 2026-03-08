@@ -111,3 +111,14 @@ export async function apiSetPetLedColor<T>(
     body: JSON.stringify({ ledColorCode }),
   });
 }
+
+export async function apiSetLostDogMode<T>(
+  creds: FiCredentials,
+  petId: string,
+  isLost: boolean
+): Promise<T> {
+  return apiFetch<T>(`/pets/${petId}/device/lost-mode`, creds, {
+    method: "PUT",
+    body: JSON.stringify({ isLost }),
+  });
+}

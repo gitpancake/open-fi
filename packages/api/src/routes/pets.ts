@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import type { FiCredentials } from "../client.js";
 import {
-  getAllPets,
+  getPetsAndBases,
   getPetLocation,
   getPetActivity,
   getPetSleep,
@@ -9,6 +9,7 @@ import {
   getPetDeviceDetails,
   setDeviceLed,
   setDeviceLedEnabled,
+  setLostDogMode,
 } from "../client.js";
 
 type Env = {
@@ -34,8 +35,8 @@ pets.use("*", async (c, next) => {
 
 pets.get("/", async (c) => {
   const creds = c.get("creds");
-  const petsList = await getAllPets(creds);
-  return c.json(petsList);
+  const data = await getPetsAndBases(creds);
+  return c.json(data);
 });
 
 pets.get("/:id/location", async (c) => {
@@ -98,6 +99,24 @@ pets.put("/:id/device/led-toggle", async (c) => {
 
   try {
     const result = await setDeviceLedEnabled(creds, pet.device.moduleId, ledEnabled);
+    return c.json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return c.json({ error: message }, 502);
+  }
+});
+
+pets.put("/:id/device/lost-mode", async (c) => {
+  const creds = c.get("creds");
+  const { isLost } = await c.req.json<{ isLost: boolean }>();
+
+  const pet = await getPetDeviceDetails(creds, c.req.param("id"));
+  if (!pet.device) {
+    return c.json({ error: "No device found for this pet" }, 404);
+  }
+
+  try {
+    const result = await setLostDogMode(creds, pet.device.moduleId, isLost);
     return c.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
