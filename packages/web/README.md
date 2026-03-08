@@ -8,7 +8,7 @@ Next.js frontend for open-fi. Features an AI chat interface powered by Claude th
 - **Pet Profile** — Photo, name, breed, weight, age
 - **Activity Widget** — Daily/weekly/monthly step counts with goal tracking
 - **Location Widget** — Current location on OpenStreetMap
-- **Device Status** — Collar connection, LED color picker, signal strength
+- **Device Status** — Collar connection, LED on/off toggle, color picker, signal strength
 
 ## Usage
 

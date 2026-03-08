@@ -88,6 +88,9 @@ export const QUERY_PET_DEVICE_DETAILS =
 export const MUTATION_SET_DEVICE_LED =
   "mutation SetDeviceLed($moduleId: String!, $ledColorCode: Int!) { setDeviceLed(moduleId: $moduleId, ledColorCode: $ledColorCode) { __typename ...DeviceDetails }}";
 
+export const MUTATION_UPDATE_DEVICE_OPS =
+  "mutation UpdateDeviceOperationParams($input: UpdateDeviceOperationParamsInput!) { updateDeviceOperationParams(input: $input) { __typename ...DeviceDetails }}";
+
 // --- Query builders ---
 
 export function buildHouseholdsQuery(): string {
@@ -166,6 +169,17 @@ export function buildPetDeviceQuery(petId: string): string {
 export function buildSetLedMutation(): string {
   return (
     MUTATION_SET_DEVICE_LED +
+    FRAGMENT_DEVICE_DETAILS +
+    FRAGMENT_LED_DETAILS +
+    FRAGMENT_OPERATIONAL_DETAILS +
+    FRAGMENT_CONNECTION_STATE_DETAILS +
+    FRAGMENT_USER_DETAILS
+  );
+}
+
+export function buildUpdateDeviceOpsMutation(): string {
+  return (
+    MUTATION_UPDATE_DEVICE_OPS +
     FRAGMENT_DEVICE_DETAILS +
     FRAGMENT_LED_DETAILS +
     FRAGMENT_OPERATIONAL_DETAILS +

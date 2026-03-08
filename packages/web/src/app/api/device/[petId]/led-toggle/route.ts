@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "~/lib/session";
-import { apiSetPetLedColor } from "~/lib/api-client";
+import { apiSetPetLedEnabled } from "~/lib/api-client";
 
 export async function PUT(
   req: NextRequest,
@@ -12,7 +12,7 @@ export async function PUT(
   }
 
   const { petId } = await params;
-  const { ledColorCode } = await req.json();
+  const { ledEnabled } = await req.json();
 
   const creds = {
     sessionId: session.sessionId,
@@ -20,7 +20,7 @@ export async function PUT(
   };
 
   try {
-    const result = await apiSetPetLedColor(creds, petId, ledColorCode);
+    const result = await apiSetPetLedEnabled(creds, petId, ledEnabled);
     return NextResponse.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

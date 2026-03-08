@@ -8,6 +8,7 @@ import {
   buildPetAllInfoQuery,
   buildPetDeviceQuery,
   buildSetLedMutation,
+  buildUpdateDeviceOpsMutation,
 } from "./queries.js";
 import type {
   HouseholdsResponse,
@@ -106,4 +107,18 @@ export async function setDeviceLed(
     { moduleId, ledColorCode }
   );
   return res.data.setDeviceLed;
+}
+
+export async function setDeviceLedEnabled(
+  creds: FiCredentials,
+  moduleId: string,
+  ledEnabled: boolean
+) {
+  const query = buildUpdateDeviceOpsMutation();
+  const res = await fiQuery<{ data: { updateDeviceOperationParams: FiPet["device"] } }>(
+    creds,
+    query,
+    { input: { moduleId, ledEnabled } }
+  );
+  return res.data.updateDeviceOperationParams;
 }

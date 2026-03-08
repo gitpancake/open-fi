@@ -8,6 +8,7 @@ import {
   getPetAllInfo,
   getPetDeviceDetails,
   setDeviceLed,
+  setDeviceLedEnabled,
 } from "../client.js";
 
 type Env = {
@@ -77,8 +78,31 @@ pets.put("/:id/device/led", async (c) => {
     return c.json({ error: "No device found for this pet" }, 404);
   }
 
-  const result = await setDeviceLed(creds, pet.device.moduleId, ledColorCode);
-  return c.json(result);
+  try {
+    const result = await setDeviceLed(creds, pet.device.moduleId, ledColorCode);
+    return c.json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return c.json({ error: message }, 502);
+  }
+});
+
+pets.put("/:id/device/led-toggle", async (c) => {
+  const creds = c.get("creds");
+  const { ledEnabled } = await c.req.json<{ ledEnabled: boolean }>();
+
+  const pet = await getPetDeviceDetails(creds, c.req.param("id"));
+  if (!pet.device) {
+    return c.json({ error: "No device found for this pet" }, 404);
+  }
+
+  try {
+    const result = await setDeviceLedEnabled(creds, pet.device.moduleId, ledEnabled);
+    return c.json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return c.json({ error: message }, 502);
+  }
 });
 
 export default pets;

@@ -25,6 +25,7 @@ All pet endpoints require authentication headers:
 | GET | `/pets/:id/details` | Comprehensive pet info (activity, sleep, location, device) |
 | GET | `/pets/:id/device` | Collar status (connection, LED, firmware) |
 | PUT | `/pets/:id/device/led` | `{ ledColorCode }` — Change collar LED color |
+| PUT | `/pets/:id/device/led-toggle` | `{ ledEnabled }` — Turn collar LED on/off |
 
 ### Health
 

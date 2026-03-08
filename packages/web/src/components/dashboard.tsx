@@ -92,7 +92,16 @@ export function Dashboard({ pets, initialPetDetails, userEmail }: DashboardProps
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: 0.3 }}
               >
-                <DeviceStatusWidget device={initialPetDetails.device} petId={pet.id} />
+                <DeviceStatusWidget
+                  device={{
+                    ...initialPetDetails.device,
+                    availableLedColors:
+                      initialPetDetails.device.availableLedColors?.length > 0
+                        ? initialPetDetails.device.availableLedColors
+                        : pet.device?.availableLedColors ?? [],
+                  }}
+                  petId={pet.id}
+                />
               </motion.div>
             </>
           )}

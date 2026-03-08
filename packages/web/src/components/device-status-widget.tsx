@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
-import { Signal } from "lucide-react";
+import { Switch } from "~/components/ui/switch";
+import { ColorSwatch } from "~/components/ui/color-swatch";
+import { Signal, Check, Loader2 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import type { FiConnectionState, FiLedColor, FiOperationParams } from "~/types/fi";
 
@@ -55,11 +57,15 @@ export function DeviceStatusWidget({ device, petId }: DeviceStatusWidgetProps) {
   const isLost = device.operationParams.mode === "LOST_DOG";
 
   const [activeColor, setActiveColor] = useState(device.ledColor);
-  const [isChanging, setIsChanging] = useState(false);
+  const [ledEnabled, setLedEnabled] = useState(device.operationParams.ledEnabled);
+  const [changingCode, setChangingCode] = useState<number | null>(null);
+  const [togglingLed, setTogglingLed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleColorChange(color: FiLedColor) {
-    if (color.ledColorCode === activeColor?.ledColorCode || isChanging) return;
-    setIsChanging(true);
+    if (color.ledColorCode === activeColor?.ledColorCode || changingCode !== null) return;
+    setChangingCode(color.ledColorCode);
+    setError(null);
     try {
       const res = await fetch(`/api/device/${petId}/led`, {
         method: "PUT",
@@ -68,9 +74,37 @@ export function DeviceStatusWidget({ device, petId }: DeviceStatusWidgetProps) {
       });
       if (res.ok) {
         setActiveColor(color);
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setError(body.error ?? "Failed to change color");
       }
+    } catch {
+      setError("Network error");
     } finally {
-      setIsChanging(false);
+      setChangingCode(null);
+    }
+  }
+
+  async function handleToggleLed(enabled: boolean) {
+    if (togglingLed) return;
+    setTogglingLed(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/device/${petId}/led-toggle`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ledEnabled: enabled }),
+      });
+      if (res.ok) {
+        setLedEnabled(enabled);
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setError(body.error ?? "Failed to toggle LED");
+      }
+    } catch {
+      setError("Network error");
+    } finally {
+      setTogglingLed(false);
     }
   }
 
@@ -105,27 +139,68 @@ export function DeviceStatusWidget({ device, petId }: DeviceStatusWidgetProps) {
           </div>
         )}
 
+        {/* LED Toggle + Color Picker */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">LED</span>
-            <span className="font-medium">{activeColor?.name ?? "Off"}</span>
-          </div>
-          {device.availableLedColors?.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {device.availableLedColors.map((color) => (
-                <button
-                  key={color.ledColorCode}
-                  onClick={() => handleColorChange(color)}
-                  disabled={isChanging}
-                  title={color.name}
-                  className={cn(
-                    "h-5 w-5 rounded-full ring-1 ring-border transition-all hover:scale-110 disabled:opacity-50",
-                    activeColor?.ledColorCode === color.ledColorCode && "ring-2 ring-foreground scale-110"
-                  )}
-                  style={{ backgroundColor: `#${color.hexCode}` }}
-                />
-              ))}
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">LED</span>
+              <Switch
+                checked={ledEnabled}
+                onCheckedChange={handleToggleLed}
+                disabled={togglingLed}
+                className="scale-75"
+              />
             </div>
+            <div className="flex items-center gap-1.5">
+              {ledEnabled && activeColor && (
+                <ColorSwatch
+                  color={`#${activeColor.hexCode}`}
+                  size="sm"
+                  className="rounded-full"
+                />
+              )}
+              <span className="font-medium">
+                {ledEnabled ? (activeColor?.name ?? "On") : "Off"}
+              </span>
+            </div>
+          </div>
+          {ledEnabled && (device.availableLedColors ?? []).length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {(device.availableLedColors ?? []).map((color) => {
+                const isActive = activeColor?.ledColorCode === color.ledColorCode;
+                const isLoading = changingCode === color.ledColorCode;
+                return (
+                  <button
+                    key={color.ledColorCode}
+                    onClick={() => handleColorChange(color)}
+                    disabled={changingCode !== null}
+                    title={color.name}
+                    className={cn(
+                      "relative flex items-center justify-center rounded-full transition-all hover:scale-110 disabled:cursor-not-allowed",
+                      isActive && "ring-2 ring-foreground ring-offset-1 ring-offset-background scale-110"
+                    )}
+                  >
+                    <ColorSwatch
+                      color={`#${color.hexCode}`}
+                      size="sm"
+                      className={cn(
+                        "rounded-full",
+                        changingCode !== null && !isLoading && !isActive && "opacity-50"
+                      )}
+                    />
+                    {isActive && !isLoading && (
+                      <Check className="absolute h-3 w-3 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
+                    )}
+                    {isLoading && (
+                      <Loader2 className="absolute h-3 w-3 animate-spin text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+          {error && (
+            <p className="text-xs text-destructive">{error}</p>
           )}
         </div>
 
