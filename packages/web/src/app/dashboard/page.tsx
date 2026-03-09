@@ -31,7 +31,7 @@ export default async function DashboardPage() {
       petDetails = details;
       timeline = feed;
       healthTrends = trends;
-      rankings = rankingsData.packs;
+      rankings = rankingsData.packs ?? [];
     }
   } catch (error) {
     console.error("Failed to fetch pet data:", error);

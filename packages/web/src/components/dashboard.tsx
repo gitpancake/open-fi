@@ -90,7 +90,7 @@ export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, ini
             )}
             {bases.length > 0 && <BaseStationsWidget bases={bases} />}
             <HealthTrendsWidget petId={pet.id} initialTrends={initialHealthTrends} />
-            {initialRankings.length > 0 && <RankingsWidget packs={initialRankings} />}
+            {initialRankings?.length > 0 && <RankingsWidget packs={initialRankings} />}
             <TimelineWidget initialFeed={initialTimeline} />
           </>
         )}
