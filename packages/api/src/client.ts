@@ -142,7 +142,7 @@ export async function getTimeline(
   const variables: Record<string, unknown> = {
     filter: "ALL",
     includeTravel,
-    pagingInstruction: cursor ? { cursor, direction: "BEFORE" } : null,
+    pagingInstruction: cursor ? { cursor, direction: "BACKWARD" } : null,
   };
   const res = await fiQuery<{
     data: {

@@ -22,7 +22,11 @@ interface TimelineWidgetProps {
 
 function formatTime(dateStr: string): string {
   const d = new Date(dateStr);
-  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const h = d.getHours();
+  const m = d.getMinutes().toString().padStart(2, "0");
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 || 12;
+  return `${h12}:${m} ${ampm}`;
 }
 
 function formatDuration(start: string, end: string): string {
