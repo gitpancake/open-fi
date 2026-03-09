@@ -193,7 +193,7 @@ export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, ini
               <ChatPanel />
             </div>
 
-            {/* Widget column 1 */}
+            {/* Widget column 1: Profile, Activity, Health Trends, Location */}
             <div className="hidden min-h-0 w-1/4 flex-col gap-3 overflow-y-auto border-l border-border/50 p-3 lg:flex">
               <motion.div {...anim(0)}>
                 <PetProfileCard pet={pet} />
@@ -206,25 +206,25 @@ export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, ini
                 />
               </motion.div>
               <motion.div {...anim(0.1)}>
+                <HealthTrendsWidget petId={pet.id} initialTrends={initialHealthTrends} />
+              </motion.div>
+              <motion.div {...anim(0.15)}>
                 <LocationWidget activity={initialPetDetails.ongoingActivity} compact />
               </motion.div>
-              {bases.length > 0 && (
-                <motion.div {...anim(0.15)}>
-                  <BaseStationsWidget bases={bases} />
-                </motion.div>
-              )}
             </div>
 
-            {/* Widget column 2 */}
+            {/* Widget column 2: Device, Base Stations, Rankings, Timeline */}
             <div className="hidden min-h-0 w-1/4 flex-col gap-3 overflow-y-auto border-l border-border/50 p-3 lg:flex">
               {deviceWithColors && (
                 <motion.div {...anim(0.05)}>
                   <DeviceStatusWidget device={deviceWithColors} petId={pet.id} />
                 </motion.div>
               )}
-              <motion.div {...anim(0.1)}>
-                <HealthTrendsWidget petId={pet.id} initialTrends={initialHealthTrends} />
-              </motion.div>
+              {bases.length > 0 && (
+                <motion.div {...anim(0.1)}>
+                  <BaseStationsWidget bases={bases} />
+                </motion.div>
+              )}
               {initialRankings?.length > 0 && (
                 <motion.div {...anim(0.15)}>
                   <RankingsWidget packs={initialRankings} />
