@@ -94,6 +94,16 @@ interface PetDevice {
 
 export { type FiCredentials } from "~/lib/api-client";
 
+function parseSleepAmounts(amounts?: Array<{ type: string; duration: number }>) {
+  if (!amounts?.length) return { sleepMinutes: 0, napMinutes: 0 };
+  const sleep = amounts.find((a) => a.type === "SLEEP");
+  const nap = amounts.find((a) => a.type === "NAP");
+  return {
+    sleepMinutes: sleep ? Math.round(sleep.duration / 60) : 0,
+    napMinutes: nap ? Math.round(nap.duration / 60) : 0,
+  };
+}
+
 export function createFiTools(creds: FiCredentials) {
   return {
     get_pets: tool({
@@ -201,22 +211,10 @@ export function createFiTools(creds: FiCredentials) {
       }),
       execute: async ({ petId }) => {
         const stats = await apiGetPetSleep<SleepStats>(creds, petId);
-
-        function parseSleep(restSummaries: RestSummary[]) {
-          if (!restSummaries?.length) return { sleepMinutes: 0, napMinutes: 0 };
-          const amounts = restSummaries[0]?.data?.sleepAmounts ?? [];
-          const sleep = amounts.find((a) => a.type === "SLEEP");
-          const nap = amounts.find((a) => a.type === "NAP");
-          return {
-            sleepMinutes: sleep ? Math.round(sleep.duration / 60) : 0,
-            napMinutes: nap ? Math.round(nap.duration / 60) : 0,
-          };
-        }
-
         return {
-          daily: parseSleep(stats.dailyStat.restSummaries),
-          weekly: parseSleep(stats.weeklyStat.restSummaries),
-          monthly: parseSleep(stats.monthlyStat.restSummaries),
+          daily: parseSleepAmounts(stats.dailyStat.restSummaries[0]?.data?.sleepAmounts),
+          weekly: parseSleepAmounts(stats.weeklyStat.restSummaries[0]?.data?.sleepAmounts),
+          monthly: parseSleepAmounts(stats.monthlyStat.restSummaries[0]?.data?.sleepAmounts),
         };
       },
     }),
@@ -260,8 +258,8 @@ export function createFiTools(creds: FiCredentials) {
             ledColor: info.device.ledColor?.name,
           },
           sleep: {
-            daily: info.dailySleepStat?.restSummaries?.[0]?.data?.sleepAmounts ?? [],
-            monthly: info.monthlySleepStat?.restSummaries?.[0]?.data?.sleepAmounts ?? [],
+            daily: parseSleepAmounts(info.dailySleepStat?.restSummaries?.[0]?.data?.sleepAmounts),
+            monthly: parseSleepAmounts(info.monthlySleepStat?.restSummaries?.[0]?.data?.sleepAmounts),
           },
         };
       },
