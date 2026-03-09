@@ -27,6 +27,9 @@ All pet endpoints require authentication headers:
 | PUT | `/pets/:id/device/led` | `{ ledColorCode }` — Change collar LED color |
 | PUT | `/pets/:id/device/led-toggle` | `{ ledEnabled }` — Turn collar LED on/off |
 | PUT | `/pets/:id/device/lost-mode` | `{ isLost }` — Toggle Lost Dog Mode (increases GPS frequency) |
+| GET | `/pets/:id/collar-state` | Detailed collar connectivity, ongoing activity, and LDM status |
+| GET | `/pets/:id/health-trends?period=` | Health trends (DAY/WEEK/MONTH) — charts and summary stats |
+| GET | `/pets/:id/rankings` | Pack leaderboard rankings with step counts and percentiles |
 
 ### Timeline
 

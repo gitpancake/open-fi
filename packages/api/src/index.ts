@@ -28,7 +28,7 @@ app.doc("/doc", {
     title: "fi-open-api",
     version: "1.0.0",
     description:
-      "REST API wrapping TryFi's GraphQL API. Provides endpoints for pet tracking, activity, sleep, device management, and base stations.",
+      "REST API wrapping TryFi's GraphQL API. Provides endpoints for pet tracking, activity, sleep, device management, health trends, pack rankings, collar state, timeline, and base stations.",
   },
   servers: [{ url: "http://localhost:3001", description: "Local development" }],
 });
