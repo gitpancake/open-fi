@@ -64,7 +64,8 @@ export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, ini
       }
     : null;
 
-  function renderWidgets(animate: boolean) {
+  // Mobile sheet widgets — stacked vertically, no animations
+  function renderMobileWidgets() {
     if (!pet) {
       return (
         <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
@@ -73,54 +74,100 @@ export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, ini
       );
     }
 
-    const Wrapper = animate ? motion.div : "div";
-    const getProps = (delay: number) =>
-      animate
-        ? { initial: { opacity: 0, x: 20 }, animate: { opacity: 1, x: 0 }, transition: { duration: 0.4, delay } }
-        : {};
-
     return (
       <>
-        <Wrapper {...getProps(0)}>
-          <PetProfileCard pet={pet} />
-        </Wrapper>
-
+        <PetProfileCard pet={pet} />
         {initialPetDetails && (
           <>
-            <Wrapper {...getProps(0.1)}>
+            <ActivityWidget
+              daily={initialPetDetails.dailyStepStat}
+              weekly={initialPetDetails.weeklyStepStat}
+              monthly={initialPetDetails.monthlyStepStat}
+            />
+            <LocationWidget activity={initialPetDetails.ongoingActivity} />
+            {deviceWithColors && (
+              <DeviceStatusWidget device={deviceWithColors} petId={pet.id} />
+            )}
+            {bases.length > 0 && <BaseStationsWidget bases={bases} />}
+            <HealthTrendsWidget petId={pet.id} initialTrends={initialHealthTrends} />
+            {initialRankings.length > 0 && <RankingsWidget packs={initialRankings} />}
+            <TimelineWidget initialFeed={initialTimeline} />
+          </>
+        )}
+      </>
+    );
+  }
+
+  // Desktop bento grid — animated entrance
+  function renderDesktopGrid() {
+    if (!pet) {
+      return (
+        <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+          No pets found. Make sure your Fi collar is set up.
+        </div>
+      );
+    }
+
+    const item = (delay: number, className: string, children: React.ReactNode) => (
+      <motion.div
+        className={className}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay }}
+      >
+        {children}
+      </motion.div>
+    );
+
+    return (
+      <div className="grid h-full auto-rows-min grid-cols-3 gap-3 overflow-y-auto p-4 xl:grid-cols-4">
+        {/* Row 1: Profile, Activity, Device */}
+        {item(0, "col-span-1", <PetProfileCard pet={pet} />)}
+
+        {initialPetDetails ? (
+          <>
+            {item(0.05, "col-span-1", (
               <ActivityWidget
                 daily={initialPetDetails.dailyStepStat}
                 weekly={initialPetDetails.weeklyStepStat}
                 monthly={initialPetDetails.monthlyStepStat}
               />
-            </Wrapper>
-            <Wrapper {...getProps(0.2)}>
-              <LocationWidget activity={initialPetDetails.ongoingActivity} />
-            </Wrapper>
-            <Wrapper {...getProps(0.3)}>
-              {deviceWithColors && (
-                <DeviceStatusWidget device={deviceWithColors} petId={pet.id} />
-              )}
-            </Wrapper>
-            {bases.length > 0 && (
-              <Wrapper {...getProps(0.4)}>
-                <BaseStationsWidget bases={bases} />
-              </Wrapper>
-            )}
-            <Wrapper {...getProps(0.5)}>
-              <HealthTrendsWidget petId={pet.id} initialTrends={initialHealthTrends} />
-            </Wrapper>
-            {initialRankings.length > 0 && (
-              <Wrapper {...getProps(0.55)}>
-                <RankingsWidget packs={initialRankings} />
-              </Wrapper>
-            )}
-            <Wrapper {...getProps(0.6)}>
-              <TimelineWidget initialFeed={initialTimeline} />
-            </Wrapper>
+            ))}
+            {item(0.1, "col-span-1 row-span-2", (
+              <div className="h-full [&>div]:h-full">
+                {deviceWithColors && (
+                  <DeviceStatusWidget device={deviceWithColors} petId={pet.id} />
+                )}
+              </div>
+            ))}
+
+            {/* Chat on xl screens takes the 4th column, spanning all rows */}
+            <motion.div
+              className="col-span-3 row-span-5 hidden min-h-0 xl:col-span-1 xl:col-start-4 xl:row-start-1 xl:flex xl:flex-col"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex min-h-0 flex-1 flex-col rounded-xl ring-1 ring-foreground/10 overflow-hidden">
+                <ChatPanel />
+              </div>
+            </motion.div>
+
+            {/* Row 2: Location (wide), Base Stations */}
+            {item(0.15, "col-span-2", <LocationWidget activity={initialPetDetails.ongoingActivity} />)}
+            {bases.length > 0 && item(0.2, "col-span-1", <BaseStationsWidget bases={bases} />)}
+
+            {/* Row 3: Health Trends, Rankings, Timeline */}
+            {item(0.25, "col-span-1", <HealthTrendsWidget petId={pet.id} initialTrends={initialHealthTrends} />)}
+            {initialRankings.length > 0 && item(0.3, "col-span-1", <RankingsWidget packs={initialRankings} />)}
+            {item(0.35, "col-span-1 row-span-2", (
+              <div className="h-full [&>div]:h-full">
+                <TimelineWidget initialFeed={initialTimeline} />
+              </div>
+            ))}
           </>
-        )}
-      </>
+        ) : null}
+      </div>
     );
   }
 
@@ -157,7 +204,7 @@ export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, ini
                 <SheetTitle>{pet?.name ?? "Pet Info"}</SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-4 px-4 pb-6">
-                {renderWidgets(false)}
+                {renderMobileWidgets()}
               </div>
             </SheetContent>
           </Sheet>
@@ -200,14 +247,23 @@ export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, ini
 
       {/* Main content */}
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        {/* Chat panel */}
-        <div className="flex min-h-0 flex-1 flex-col">
+        {/* Mobile: full-width chat */}
+        <div className="flex min-h-0 flex-1 flex-col lg:hidden">
           <ChatPanel />
         </div>
 
-        {/* Desktop sidebar */}
-        <div className="hidden w-[400px] flex-col gap-4 overflow-y-auto border-l border-border/50 p-4 lg:flex">
-          {renderWidgets(true)}
+        {/* Desktop: bento grid with chat alongside on xl */}
+        <div className="hidden min-h-0 flex-1 lg:flex lg:flex-col">
+          {/* On lg (not xl): show chat + grid side by side */}
+          <div className="flex min-h-0 flex-1">
+            <div className="min-h-0 flex-1">
+              {renderDesktopGrid()}
+            </div>
+            {/* Chat panel for lg screens (not xl, where it's in the grid) */}
+            <div className="flex w-[380px] flex-col border-l border-border/50 xl:hidden">
+              <ChatPanel />
+            </div>
+          </div>
         </div>
       </div>
     </div>
