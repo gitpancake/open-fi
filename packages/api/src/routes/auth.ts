@@ -31,6 +31,8 @@ const loginRoute = createRoute({
 auth.openapi(loginRoute, async (c) => {
   const { email, password } = c.req.valid("json");
 
+  console.log(`[login] attempting login for ${email} -> ${API_HOST}${API_LOGIN}`);
+
   const fiResponse = await fetch(API_HOST + API_LOGIN, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -38,7 +40,9 @@ auth.openapi(loginRoute, async (c) => {
   });
 
   if (!fiResponse.ok) {
-    return c.json({ error: "Invalid credentials" }, 401);
+    const body = await fiResponse.text().catch(() => "");
+    console.error(`[login] TryFi returned ${fiResponse.status}: ${body}`);
+    return c.json({ error: `TryFi auth failed: ${fiResponse.status}` }, 401);
   }
 
   const data = (await fiResponse.json()) as {
@@ -48,8 +52,11 @@ auth.openapi(loginRoute, async (c) => {
   };
 
   if (data.error) {
+    console.error(`[login] TryFi error:`, data.error);
     return c.json({ error: data.error.message || "Login failed" }, 401);
   }
+
+  console.log(`[login] success for ${email}, userId=${data.userId}`);
 
   // Extract cookie name=value pairs from Set-Cookie headers
   const setCookieHeaders = fiResponse.headers.getSetCookie();
