@@ -22,16 +22,16 @@ export default async function DashboardPage() {
     pets = data.pets;
     bases = data.bases;
     if (pets.length > 0) {
-      const [details, feed, trends, rankingsData] = await Promise.all([
+      const [detailsResult, feedResult, trendsResult, rankingsResult] = await Promise.allSettled([
         apiGetPetDetails<PetAllInfoResponse["data"]["pet"]>(creds, pets[0].id),
         apiGetTimeline<FiTimelineFeed>(creds),
         apiGetHealthTrends<FiHealthTrendsResponse>(creds, pets[0].id, "DAY"),
-        apiGetRankings<{ packs: FiPack[] }>(creds, pets[0].id).catch(() => ({ packs: [] })),
+        apiGetRankings<{ packs: FiPack[] }>(creds, pets[0].id),
       ]);
-      petDetails = details;
-      timeline = feed;
-      healthTrends = trends;
-      rankings = rankingsData.packs ?? [];
+      petDetails = detailsResult.status === "fulfilled" ? detailsResult.value : null;
+      timeline = feedResult.status === "fulfilled" ? feedResult.value : null;
+      healthTrends = trendsResult.status === "fulfilled" ? trendsResult.value : null;
+      rankings = rankingsResult.status === "fulfilled" ? (rankingsResult.value.packs ?? []) : [];
     }
   } catch (error) {
     console.error("Failed to fetch pet data:", error);
