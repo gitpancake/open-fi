@@ -10,6 +10,7 @@ import {
   setDeviceLed,
   setDeviceLedEnabled,
   setLostDogMode,
+  getTimeline,
 } from "../client.js";
 import {
   PetsAndBasesSchema,
@@ -350,6 +351,38 @@ pets.openapi(lostModeRoute, async (c) => {
     const message = err instanceof Error ? err.message : "Unknown error";
     return c.json({ error: message } as any, 502);
   }
+});
+
+// --- GET /timeline ---
+const timelineRoute = createRoute({
+  method: "get",
+  path: "/timeline",
+  tags: ["Timeline"],
+  summary: "Get activity timeline feed",
+  description: "Returns a paginated feed of activities (walks, rest, travel, play) and notifications. Use cursor for pagination.",
+  request: {
+    query: z.object({
+      cursor: z.string().optional().openapi({ description: "Pagination cursor (base64 timestamp from pageInfo.endCursor)" }),
+      includeTravel: z.string().optional().openapi({ description: "Include car travel activities (default: true)" }),
+    }),
+  },
+  responses: {
+    200: {
+      content: { "application/json": { schema: z.object({}).passthrough() } },
+      description: "Timeline feed with feedItems and pageInfo",
+    },
+    401: {
+      content: { "application/json": { schema: ErrorSchema } },
+      description: "Missing Fi credentials",
+    },
+  },
+});
+
+pets.openapi(timelineRoute, async (c) => {
+  const creds = c.get("creds");
+  const { cursor, includeTravel } = c.req.valid("query");
+  const feed = await getTimeline(creds, cursor ?? null, includeTravel !== "false");
+  return c.json(feed as any);
 });
 
 export default pets;

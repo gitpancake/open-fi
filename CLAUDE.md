@@ -25,7 +25,9 @@ cd packages/web && pnpm dev    # Web only
 - **Vercel AI SDK v6** — uses `UIMessage` format with `parts` (not `content` string). Must use `convertToModelMessages()` when passing to `streamText()`
 - **iron-session** — session lives in the web package only, credentials passed to API via `X-Fi-Cookies` / `X-Session-Id` headers
 - **TryFi GraphQL queries** — exact strings from pytryfi, concatenated with fragments. Do not modify query strings
-- **Read-only** — no mutations or device controls
+- **Device controls** — LED color, LED toggle, Lost Dog Mode via mutations
+- **OpenAPI docs** — `@hono/zod-openapi` generates spec at `/doc`, Scalar UI at `/reference`
+- **Timeline** — reverse-engineered from Fi app via mitmproxy, cursor-based pagination
 
 ## Data Flow
 
@@ -37,20 +39,21 @@ User -> Next.js (3000) -> /api/chat -> Claude (tool calling)
 ## Important Files
 
 ### API (`packages/api/src/`)
-- `client.ts` — `FiCredentials` interface, `fiQuery()` GraphQL wrapper, all pet data functions
-- `queries.ts` — GraphQL query strings + fragment strings from pytryfi. `buildHouseholdsQuery()`, `buildPetLocationQuery(petId)`, etc.
-- `types.ts` — TypeScript interfaces for all Fi API response shapes
-- `routes/auth.ts` — `POST /auth/login` proxies to TryFi
-- `routes/pets.ts` — REST endpoints wrapping client functions, uses Hono typed variables for middleware creds
-- `index.ts` — Hono app entry, CORS config, port 3001
+- `client.ts` — `FiCredentials` interface, `fiQuery()` GraphQL wrapper, all pet data functions + `getTimeline()`
+- `queries.ts` — GraphQL query strings + fragment strings from pytryfi + timeline query (mitmproxy). `buildHouseholdsQuery()`, `buildPetLocationQuery(petId)`, `buildTimelineQuery()`, etc.
+- `schemas.ts` — Zod schemas for OpenAPI request/response validation
+- `routes/auth.ts` — `POST /auth/login` proxies to TryFi (OpenAPIHono)
+- `routes/pets.ts` — REST endpoints wrapping client functions (OpenAPIHono), includes `/timeline`
+- `index.ts` — OpenAPIHono app entry, CORS config, `/doc` + `/reference` endpoints, port 3001
 
 ### Web (`packages/web/src/`)
-- `lib/api-client.ts` — typed fetch wrapper for fi-open-api (`apiGetPets`, `apiGetPetLocation`, etc.)
-- `lib/ai-tools.ts` — 6 Claude tool definitions using Vercel AI SDK `tool()` with `inputSchema` (Zod)
+- `lib/api-client.ts` — typed fetch wrapper for fi-open-api (`apiGetPets`, `apiGetPetLocation`, `apiGetTimeline`, etc.)
+- `lib/ai-tools.ts` — 9 Claude tool definitions using Vercel AI SDK `tool()` with `inputSchema` (Zod)
 - `lib/session.ts` — iron-session config, `getServerSession()` helper
 - `app/api/chat/route.ts` — streaming chat endpoint using Claude Haiku with tools
 - `app/dashboard/page.tsx` — SSR page that fetches initial pet data
-- `components/dashboard.tsx` — two-panel layout (chat left, widgets right)
+- `components/dashboard.tsx` — two-panel layout (chat left, widgets right), mobile sheet
+- `components/timeline-widget.tsx` — activity timeline with diceui, client-side pagination
 - `components/chat-panel.tsx` — `useChat()` hook, manual input state, `sendMessage({ text })` pattern
 
 ## AI SDK v6 Gotchas
@@ -75,4 +78,6 @@ Only in `packages/web/.env.local`:
 - Returns `{ userId, sessionId }` + Set-Cookie headers (`fi.sid`, `i18next`)
 - GraphQL: `POST https://api.tryfi.com/graphql` with JSON `{ query }` + cookie header
 - Pet queries use `__PET_ID__` placeholder replaced at runtime
+- Timeline query uses GraphQL variables (`$pagingInstruction`, `$includeTravel`, `$filter`)
 - Queries must include all required fragments concatenated into one string
+- Timeline query was reverse-engineered from the Fi iOS app via mitmproxy (not from pytryfi)

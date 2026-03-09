@@ -169,6 +169,54 @@ export interface FiUser {
   userHouseholds: FiHousehold[];
 }
 
+// Timeline types
+
+export interface FiTimelineActivity {
+  __typename: "Walk" | "Rest" | "Travel" | "Play";
+  id: string;
+  start: string;
+  end: string;
+  areaName: string | null;
+  presentUserString: string | null;
+  totalSteps: number;
+  distance?: number;
+  neighborhood?: string;
+  cityState?: string;
+  position?: FiPosition;
+  positions?: FiPosition[];
+  place?: FiPlace;
+}
+
+export interface FiTimelineActivityItem {
+  __typename: "FiFeedActivityItem";
+  id: string;
+  timestamp: string;
+  activity: FiTimelineActivity;
+  pet?: { __typename: string; id: string; name: string };
+}
+
+export interface FiTimelineNotificationItem {
+  __typename: "FiFeedGenericNotificationItem";
+  id: string;
+  timestamp: string;
+  title: string | null;
+  body: { __typename: string; text: string } | null;
+}
+
+export type FiTimelineItem = FiTimelineActivityItem | FiTimelineNotificationItem;
+
+export interface FiTimelinePageInfo {
+  startCursor: string;
+  endCursor: string;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface FiTimelineFeed {
+  feedItems: FiTimelineItem[];
+  pageInfo: FiTimelinePageInfo;
+}
+
 // Response wrappers
 
 export interface HouseholdsResponse {

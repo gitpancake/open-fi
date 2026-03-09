@@ -9,6 +9,7 @@ import {
   buildPetDeviceQuery,
   buildSetLedMutation,
   buildUpdateDeviceOpsMutation,
+  buildTimelineQuery,
 } from "./queries.js";
 import type {
   HouseholdsResponse,
@@ -130,6 +131,35 @@ export async function setDeviceLedEnabled(
     { input: { moduleId, ledEnabled } }
   );
   return res.data.updateDeviceOperationParams;
+}
+
+export async function getTimeline(
+  creds: FiCredentials,
+  cursor?: string | null,
+  includeTravel = true
+) {
+  const query = buildTimelineQuery();
+  const variables: Record<string, unknown> = {
+    filter: "ALL",
+    includeTravel,
+    pagingInstruction: cursor ? { cursor, direction: "BEFORE" } : null,
+  };
+  const res = await fiQuery<{
+    data: {
+      currentUser: {
+        fiFeed: {
+          feedItems: unknown[];
+          pageInfo: {
+            startCursor: string;
+            endCursor: string;
+            hasNextPage: boolean;
+            hasPreviousPage: boolean;
+          };
+        };
+      };
+    };
+  }>(creds, query, variables);
+  return res.data.currentUser.fiFeed;
 }
 
 export async function setLostDogMode(

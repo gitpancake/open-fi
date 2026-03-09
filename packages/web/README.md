@@ -11,6 +11,7 @@ Next.js frontend for open-fi. Features an AI chat interface powered by Claude th
 - **Device Status** — Battery level, collar connection, LED on/off toggle, color picker, signal strength, temperature
 - **Lost Dog Mode** — Toggle to increase GPS tracking frequency when your dog is lost
 - **Base Stations** — Wi-Fi base station status (online/offline, network name)
+- **Activity Timeline** — Chronological feed of walks, rest, travel, play with pagination
 - **Chat History** — Persisted in localStorage across page reloads
 
 ## Usage
@@ -61,6 +62,7 @@ FI_API_URL=http://localhost:3001
 | `get_device_status` | Collar battery, connection, LED, firmware, temperature |
 | `set_led_color` | Change the collar LED color by name |
 | `set_lost_mode` | Toggle Lost Dog Mode on/off |
+| `get_timeline` | Recent activity feed (walks, rest, travel, notifications) |
 
 ## Layout
 
@@ -75,12 +77,15 @@ FI_API_URL=http://localhost:3001
 |  "Where is Luna?"      |  Location Widget         |
 |  "Luna is at home..."  +-------------------------+
 |                        |  Device Status           |
-|  [Ask about Luna...]   |                         |
+|                        +-------------------------+
+|                        |  Base Stations           |
+|                        +-------------------------+
+|  [Ask about Luna...]   |  Timeline Feed           |
 +------------------------+-------------------------+
 ```
 
 - Left panel (60%): Chat with streaming responses
-- Right panel (40%): Persistent widgets (hidden on mobile)
+- Right panel (40%): Persistent widgets (hidden on mobile, accessible via sheet)
 
 ## Stack
 
@@ -89,6 +94,7 @@ FI_API_URL=http://localhost:3001
 - **Vercel AI SDK v6** (`ai` + `@ai-sdk/anthropic` + `@ai-sdk/react`)
 - **iron-session** — encrypted cookie-based sessions
 - **recharts** — activity charts
+- **@diceui/timeline** — timeline feed component
 - **Inter + JetBrains Mono** fonts
 
 ## Project Structure
@@ -105,6 +111,7 @@ src/
 │       ├── auth/login/route.ts   # Login via fi-open-api
 │       ├── auth/logout/route.ts  # Clear session
 │       ├── chat/route.ts         # AI streaming chat
+│       ├── timeline/route.ts     # Timeline pagination proxy
 │       └── device/[petId]/
 │           ├── led/             # PUT — change collar LED color
 │           ├── led-toggle/      # PUT — toggle LED on/off
@@ -118,6 +125,7 @@ src/
 │   ├── location-widget.tsx       # Map embed
 │   ├── device-status-widget.tsx  # Collar status + battery + lost mode
 │   ├── base-stations-widget.tsx  # Wi-Fi base stations
+│   ├── timeline-widget.tsx       # Activity timeline feed
 │   ├── login-form.tsx            # Login form
 │   └── ui/                       # shadcn primitives
 ├── lib/

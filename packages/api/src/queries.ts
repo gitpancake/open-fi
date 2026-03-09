@@ -83,6 +83,73 @@ export const QUERY_PET_REST =
 export const QUERY_PET_DEVICE_DETAILS =
   `query {  pet (id: "${VAR_PET_ID}") {    __typename    ...PetProfile  }}`;
 
+// --- Timeline query (reverse-engineered from Fi app via mitmproxy) ---
+
+export const QUERY_TIMELINE =
+  `query Timeline($pagingInstruction: PagingInstruction, $includeTravel: Boolean!, $filter: FiFeedFilter) {
+  currentUser {
+    __typename
+    fiFeed(pagingInstruction: $pagingInstruction, includeTravel: $includeTravel, filter: $filter) {
+      __typename
+      feedItems {
+        __typename
+        id
+        timestamp
+        ... on FiFeedActivityItem {
+          __typename
+          activity {
+            __typename
+            id
+            start
+            end
+            areaName
+            presentUserString
+            totalSteps
+            ... on Walk {
+              __typename
+              distance
+              neighborhood
+              cityState
+            }
+            ... on Rest {
+              __typename
+              position { __typename ...PositionCoordinates }
+              place { __typename ...PlaceDetails }
+            }
+            ... on Travel {
+              __typename
+              distance
+              positions { __typename ...PositionCoordinates }
+            }
+            ... on Play {
+              __typename
+              position { __typename ...PositionCoordinates }
+              place { __typename ...PlaceDetails }
+            }
+          }
+          pet {
+            __typename
+            id
+            name
+          }
+        }
+        ... on FiFeedGenericNotificationItem {
+          __typename
+          title
+          body { __typename text }
+        }
+      }
+      pageInfo {
+        __typename
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+    }
+  }
+}`;
+
 // --- Mutations ---
 
 export const MUTATION_SET_DEVICE_LED =
@@ -163,6 +230,14 @@ export function buildPetDeviceQuery(petId: string): string {
     FRAGMENT_USER_DETAILS +
     FRAGMENT_BREED_DETAILS +
     FRAGMENT_PHOTO_DETAILS
+  );
+}
+
+export function buildTimelineQuery(): string {
+  return (
+    QUERY_TIMELINE +
+    FRAGMENT_POSITION_COORDINATES +
+    FRAGMENT_PLACE_DETAILS
   );
 }
 

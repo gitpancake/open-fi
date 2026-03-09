@@ -112,6 +112,14 @@ export async function apiSetPetLedColor<T>(
   });
 }
 
+export async function apiGetTimeline<T>(
+  creds: FiCredentials,
+  cursor?: string | null
+): Promise<T> {
+  const params = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+  return apiFetch<T>(`/pets/timeline${params}`, creds);
+}
+
 export async function apiSetLostDogMode<T>(
   creds: FiCredentials,
   petId: string,

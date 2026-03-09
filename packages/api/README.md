@@ -28,11 +28,20 @@ All pet endpoints require authentication headers:
 | PUT | `/pets/:id/device/led-toggle` | `{ ledEnabled }` — Turn collar LED on/off |
 | PUT | `/pets/:id/device/lost-mode` | `{ isLost }` — Toggle Lost Dog Mode (increases GPS frequency) |
 
-### Health
+### Timeline
+
+| Method | Path | Query Params | Response |
+|---|---|---|---|
+| GET | `/pets/timeline` | `cursor?`, `includeTravel?` | Paginated activity feed (walks, rest, travel, play, notifications) |
+
+### Health & Docs
 
 | Method | Path | Response |
 |---|---|---|
 | GET | `/health` | `{ status: "ok" }` |
+| GET | `/doc` | OpenAPI 3.1 JSON spec |
+| GET | `/reference` | Interactive API reference (Scalar UI) |
+| GET | `/` | Redirects to `/reference` |
 
 ## Usage
 
@@ -68,7 +77,8 @@ curl http://localhost:3001/pets/PET_ID/location \
 
 ## Stack
 
-- **Hono** — lightweight web framework
+- **Hono** + **@hono/zod-openapi** — lightweight web framework with OpenAPI spec generation
+- **@scalar/hono-api-reference** — interactive API docs UI
 - **@hono/node-server** — Node.js adapter
 - **tsx** — TypeScript execution (dev)
 
@@ -76,7 +86,7 @@ curl http://localhost:3001/pets/PET_ID/location \
 
 1. Client sends Fi credentials via headers on each request
 2. API forwards credentials as cookies to `api.tryfi.com/graphql`
-3. GraphQL queries are built from exact strings reverse-engineered from [pytryfi](https://github.com/sbabcock23/pytryfi)
+3. GraphQL queries are built from exact strings reverse-engineered from [pytryfi](https://github.com/sbabcock23/pytryfi) and the Fi app (via mitmproxy)
 4. Responses are passed through as JSON
 
 The API is stateless — it doesn't store sessions or credentials. Authentication state is managed by the caller.

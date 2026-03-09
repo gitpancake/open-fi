@@ -9,6 +9,7 @@ import {
   apiGetPetDevice,
   apiSetPetLedColor,
   apiSetLostDogMode,
+  apiGetTimeline,
   type FiCredentials,
 } from "~/lib/api-client";
 
@@ -343,6 +344,59 @@ export function createFiTools(creds: FiCredentials) {
             : "Lost Dog Mode deactivated — returned to normal tracking",
           mode: isLost ? "LOST_DOG" : "NORMAL",
         };
+      },
+    }),
+
+    get_timeline: tool({
+      description:
+        "Get the activity timeline/feed showing recent walks, rest periods, car rides, and notifications. Use when the user asks what their dog has been doing today, recent activities, or wants a timeline/history.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        interface TimelineFeed {
+          feedItems: Array<{
+            __typename: string;
+            id: string;
+            timestamp: string;
+            activity?: {
+              __typename: string;
+              start: string;
+              end: string;
+              totalSteps: number;
+              distance?: number;
+              areaName?: string;
+              presentUserString?: string;
+              place?: { name: string };
+              neighborhood?: string;
+            };
+            body?: { text: string };
+          }>;
+        }
+
+        const feed = await apiGetTimeline<TimelineFeed>(creds);
+        return feed.feedItems
+          .filter((item) => item.__typename === "FiFeedActivityItem" || item.__typename === "FiFeedGenericNotificationItem")
+          .map((item) => {
+            if (item.__typename === "FiFeedActivityItem" && item.activity) {
+              const act = item.activity;
+              const durationMs = new Date(act.end).getTime() - new Date(act.start).getTime();
+              const durationMins = Math.round(durationMs / 60000);
+              return {
+                type: act.__typename,
+                start: act.start,
+                end: act.end,
+                durationMinutes: durationMins,
+                steps: act.totalSteps,
+                distanceMiles: act.distance ? +(act.distance * 0.000621371).toFixed(2) : null,
+                location: act.place?.name || act.neighborhood || act.areaName || null,
+                withUser: act.presentUserString || null,
+              };
+            }
+            return {
+              type: "notification",
+              timestamp: item.timestamp,
+              message: item.body?.text || null,
+            };
+          });
       },
     }),
   };
