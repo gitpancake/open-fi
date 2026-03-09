@@ -60,7 +60,7 @@ export function LocationWidget({ activity, compact }: LocationWidgetProps) {
           <div className="overflow-hidden rounded-xl ring-1 ring-border">
             <iframe
               src={mapSrc}
-              className={`w-full border-0 ${compact ? "h-[100px]" : "h-[180px]"}`}
+              className={`w-full border-0 ${compact ? "h-[140px]" : "h-[180px]"}`}
               title="Pet location"
             />
           </div>
