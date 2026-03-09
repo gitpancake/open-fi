@@ -32,3 +32,6 @@ next-env.d.ts
 
 # pnpm
 pnpm-lock.yaml
+
+# mitmproxy request captures
+requests/
