@@ -120,6 +120,14 @@ export async function apiGetTimeline<T>(
   return apiFetch<T>(`/pets/timeline${params}`, creds);
 }
 
+export async function apiGetHealthTrends<T>(
+  creds: FiCredentials,
+  petId: string,
+  period: string = "DAY"
+): Promise<T> {
+  return apiFetch<T>(`/pets/${petId}/health-trends?period=${encodeURIComponent(period)}`, creds);
+}
+
 export async function apiSetLostDogMode<T>(
   creds: FiCredentials,
   petId: string,

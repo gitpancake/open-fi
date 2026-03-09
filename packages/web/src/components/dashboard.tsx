@@ -8,6 +8,7 @@ import { LocationWidget } from "~/components/location-widget";
 import { DeviceStatusWidget } from "~/components/device-status-widget";
 import { BaseStationsWidget } from "~/components/base-stations-widget";
 import { TimelineWidget } from "~/components/timeline-widget";
+import { HealthTrendsWidget } from "~/components/health-trends-widget";
 import { Button } from "~/components/ui/button";
 import {
   Sheet,
@@ -19,7 +20,7 @@ import {
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { LogOut, PanelRight } from "lucide-react";
-import type { FiPet, FiBase, FiTimelineFeed } from "~/types/fi";
+import type { FiPet, FiBase, FiTimelineFeed, FiHealthTrendsResponse } from "~/types/fi";
 import type { PetAllInfoResponse } from "~/types/fi";
 
 interface DashboardProps {
@@ -27,10 +28,11 @@ interface DashboardProps {
   bases: FiBase[];
   initialPetDetails: PetAllInfoResponse["data"]["pet"] | null;
   initialTimeline: FiTimelineFeed | null;
+  initialHealthTrends: FiHealthTrendsResponse | null;
   userEmail: string;
 }
 
-export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, userEmail }: DashboardProps) {
+export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, initialHealthTrends, userEmail }: DashboardProps) {
   const router = useRouter();
   const pet = pets[0] ?? null;
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -104,6 +106,9 @@ export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, use
               </Wrapper>
             )}
             <Wrapper {...getProps(0.5)}>
+              <HealthTrendsWidget petId={pet.id} initialTrends={initialHealthTrends} />
+            </Wrapper>
+            <Wrapper {...getProps(0.6)}>
               <TimelineWidget initialFeed={initialTimeline} />
             </Wrapper>
           </>

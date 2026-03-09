@@ -10,6 +10,7 @@ import {
   apiSetPetLedColor,
   apiSetLostDogMode,
   apiGetTimeline,
+  apiGetHealthTrends,
   type FiCredentials,
 } from "~/lib/api-client";
 
@@ -397,6 +398,60 @@ export function createFiTools(creds: FiCredentials) {
               message: item.body?.text || null,
             };
           });
+      },
+    }),
+    get_health_trends: tool({
+      description:
+        "Get health trend data for a pet showing activity, sleep, and behavior patterns over time. Returns trend charts and summary statistics with change indicators. Use when the user asks about trends, patterns, or how their dog's health/activity has been changing.",
+      inputSchema: z.object({
+        petId: z.string().describe("The pet ID to get health trends for"),
+        period: z.enum(["DAY", "WEEK", "MONTH"]).optional().describe("Time period for trends (default: DAY)"),
+      }),
+      execute: async ({ petId, period }) => {
+        interface HealthTrendSummary {
+          placeholder: string | null;
+          eventsSummary: string | null;
+          eventsChange: { direction: string; change: string } | null;
+          durationSummary: string | null;
+          durationChange: { direction: string; change: string } | null;
+        }
+        interface HealthTrend {
+          id: string;
+          title: string;
+          disabled: boolean;
+          chart: {
+            __typename: string;
+            average?: number;
+            minimum?: number;
+            maximum?: number;
+            points?: number[];
+          } | null;
+          summaryComponents: HealthTrendSummary[];
+        }
+        interface HealthTrendsData {
+          period: string;
+          genericTrends: HealthTrend[];
+          behaviorTrends: HealthTrend[];
+        }
+
+        const data = await apiGetHealthTrends<HealthTrendsData>(creds, petId, period ?? "DAY");
+        const formatTrend = (t: HealthTrend) => {
+          const summary = t.summaryComponents?.[0];
+          return {
+            title: t.title,
+            eventsSummary: summary?.eventsSummary ?? null,
+            eventsChange: summary?.eventsChange ?? null,
+            durationSummary: summary?.durationSummary ?? null,
+            durationChange: summary?.durationChange ?? null,
+            chartAverage: t.chart && "average" in t.chart ? t.chart.average : null,
+          };
+        };
+
+        return {
+          period: data.period,
+          genericTrends: data.genericTrends.filter((t) => !t.disabled).map(formatTrend),
+          behaviorTrends: data.behaviorTrends.filter((t) => !t.disabled).map(formatTrend),
+        };
       },
     }),
   };

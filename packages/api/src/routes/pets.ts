@@ -11,6 +11,7 @@ import {
   setDeviceLedEnabled,
   setLostDogMode,
   getTimeline,
+  getHealthTrends,
 } from "../client.js";
 import {
   PetsAndBasesSchema,
@@ -383,6 +384,38 @@ pets.openapi(timelineRoute, async (c) => {
   const { cursor, includeTravel } = c.req.valid("query");
   const feed = await getTimeline(creds, cursor ?? null, includeTravel !== "false");
   return c.json(feed as any);
+});
+
+// --- GET /:id/health-trends ---
+const healthTrendsRoute = createRoute({
+  method: "get",
+  path: "/{id}/health-trends",
+  tags: ["Pets"],
+  summary: "Get pet health trends",
+  description: "Returns health trend data (activity, sleep, behavior) with chart points and summary statistics for a given period.",
+  request: {
+    params: PetIdParamSchema,
+    query: z.object({
+      period: z.enum(["DAY", "WEEK", "MONTH"]).optional().openapi({ description: "Trend period (default: DAY)" }),
+    }),
+  },
+  responses: {
+    200: {
+      content: { "application/json": { schema: z.object({}).passthrough() } },
+      description: "Health trend data",
+    },
+    401: {
+      content: { "application/json": { schema: ErrorSchema } },
+      description: "Missing Fi credentials",
+    },
+  },
+});
+
+pets.openapi(healthTrendsRoute, async (c) => {
+  const creds = c.get("creds");
+  const { period } = c.req.valid("query");
+  const trends = await getHealthTrends(creds, c.req.valid("param").id, period ?? "DAY");
+  return c.json(trends as any);
 });
 
 export default pets;

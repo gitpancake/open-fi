@@ -275,3 +275,68 @@ export interface PetAllInfoResponse {
     };
   };
 }
+
+// Health Trends types
+
+export interface FiHealthTrendSummaryChange {
+  __typename: string;
+  direction: string;
+  change: string;
+}
+
+export interface FiHealthTrendSummary {
+  __typename: string;
+  placeholder: string | null;
+  eventsSummary: string | null;
+  eventsChange: FiHealthTrendSummaryChange | null;
+  durationSummary: string | null;
+  durationChange: FiHealthTrendSummaryChange | null;
+}
+
+export interface FiHealthTrendGraphPoint {
+  __typename?: string;
+  [key: string]: unknown;
+}
+
+export interface FiHealthTrendGraph {
+  __typename: "PetHealthTrendGraph";
+  color: string;
+  showAverage: boolean;
+  average: number;
+  minimum: number;
+  maximum: number;
+  points: number[];
+}
+
+export interface FiHealthTrendSegment {
+  __typename: string;
+  offset: number;
+  length: number;
+  color: string;
+  intervalType: string;
+}
+
+export interface FiHealthTrendSegmentedTimeline {
+  __typename: "PetHealthTrendSegmentedTimeline";
+  length: number;
+  dataEnd: number;
+  segments: FiHealthTrendSegment[];
+}
+
+export type FiHealthTrendChart = FiHealthTrendGraph | FiHealthTrendSegmentedTimeline;
+
+export interface FiHealthTrend {
+  __typename: string;
+  id: string;
+  icon: { urlString: string } | null;
+  disabled: boolean;
+  title: string;
+  chart: FiHealthTrendChart | null;
+  summaryComponents: FiHealthTrendSummary[];
+}
+
+export interface FiHealthTrendsResponse {
+  period: string;
+  genericTrends: FiHealthTrend[];
+  behaviorTrends: FiHealthTrend[];
+}

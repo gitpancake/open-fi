@@ -10,6 +10,7 @@ import {
   buildSetLedMutation,
   buildUpdateDeviceOpsMutation,
   buildTimelineQuery,
+  buildHealthTrendsQuery,
 } from "./queries.js";
 import type {
   HouseholdsResponse,
@@ -160,6 +161,24 @@ export async function getTimeline(
     };
   }>(creds, query, variables);
   return res.data.currentUser.fiFeed;
+}
+
+export async function getHealthTrends(
+  creds: FiCredentials,
+  petId: string,
+  period: string = "DAY"
+) {
+  const query = buildHealthTrendsQuery();
+  const res = await fiQuery<{
+    data: {
+      getPetHealthTrendsForPet: {
+        period: string;
+        genericTrends: unknown[];
+        behaviorTrends: unknown[];
+      };
+    };
+  }>(creds, query, { petId, period });
+  return res.data.getPetHealthTrendsForPet;
 }
 
 export async function setLostDogMode(

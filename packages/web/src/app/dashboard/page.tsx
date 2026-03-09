@@ -1,7 +1,7 @@
 import { getServerSession } from "~/lib/session";
-import { apiGetPets, apiGetPetDetails, apiGetTimeline } from "~/lib/api-client";
+import { apiGetPets, apiGetPetDetails, apiGetTimeline, apiGetHealthTrends } from "~/lib/api-client";
 import { Dashboard } from "~/components/dashboard";
-import type { FiPet, FiBase, FiTimelineFeed } from "~/types/fi";
+import type { FiPet, FiBase, FiTimelineFeed, FiHealthTrendsResponse } from "~/types/fi";
 import type { PetAllInfoResponse } from "~/types/fi";
 
 export default async function DashboardPage() {
@@ -12,6 +12,7 @@ export default async function DashboardPage() {
   let bases: FiBase[] = [];
   let petDetails: PetAllInfoResponse["data"]["pet"] | null = null;
   let timeline: FiTimelineFeed | null = null;
+  let healthTrends: FiHealthTrendsResponse | null = null;
 
   const creds = { sessionId: session.sessionId, fiCookies: session.fiCookies };
 
@@ -20,12 +21,14 @@ export default async function DashboardPage() {
     pets = data.pets;
     bases = data.bases;
     if (pets.length > 0) {
-      const [details, feed] = await Promise.all([
+      const [details, feed, trends] = await Promise.all([
         apiGetPetDetails<PetAllInfoResponse["data"]["pet"]>(creds, pets[0].id),
         apiGetTimeline<FiTimelineFeed>(creds),
+        apiGetHealthTrends<FiHealthTrendsResponse>(creds, pets[0].id, "DAY"),
       ]);
       petDetails = details;
       timeline = feed;
+      healthTrends = trends;
     }
   } catch (error) {
     console.error("Failed to fetch pet data:", error);
@@ -38,6 +41,7 @@ export default async function DashboardPage() {
       bases={bases ?? []}
       initialPetDetails={petDetails}
       initialTimeline={timeline}
+      initialHealthTrends={healthTrends}
       userEmail={session.email}
     />
   );

@@ -150,6 +150,20 @@ export const QUERY_TIMELINE =
   }
 }`;
 
+// --- Health Trends query (reverse-engineered from Fi app via mitmproxy) ---
+
+export const FRAGMENT_HEALTH_TREND_SUMMARY_CHANGE =
+  "fragment PetHealthTrendSummaryChangeApiModel on PetHealthTrendSummaryChange { __typename direction change }";
+
+export const FRAGMENT_HEALTH_TREND_SUMMARY =
+  "fragment PetHealthTrendSummaryApiModel on PetHealthTrendSummary { __typename placeholder eventsSummary eventsChange { __typename ...PetHealthTrendSummaryChangeApiModel } durationSummary durationChange { __typename ...PetHealthTrendSummaryChangeApiModel } }";
+
+export const FRAGMENT_HEALTH_TREND =
+  "fragment PetHealthTrendApiModel on PetHealthTrend { __typename id icon { __typename urlString: fullSize } disabled title chart { __typename ... on PetHealthTrendGraph { __typename color showAverage average minimum maximum points: intervals } ... on PetHealthTrendSegmentedTimeline { __typename length dataEnd segments: intervals { __typename offset length color intervalType } } } summaryComponents { __typename ...PetHealthTrendSummaryApiModel } }";
+
+export const QUERY_HEALTH_TRENDS =
+  "query HealthTrends($petId: ID!, $period: PetHealthTrendPeriod!) { getPetHealthTrendsForPet(petId: $petId, period: $period) { __typename period genericTrends { __typename ...PetHealthTrendApiModel } behaviorTrends { __typename ...PetHealthTrendApiModel } } }";
+
 // --- Mutations ---
 
 export const MUTATION_SET_DEVICE_LED =
@@ -238,6 +252,15 @@ export function buildTimelineQuery(): string {
     QUERY_TIMELINE +
     FRAGMENT_POSITION_COORDINATES +
     FRAGMENT_PLACE_DETAILS
+  );
+}
+
+export function buildHealthTrendsQuery(): string {
+  return (
+    QUERY_HEALTH_TRENDS +
+    FRAGMENT_HEALTH_TREND +
+    FRAGMENT_HEALTH_TREND_SUMMARY +
+    FRAGMENT_HEALTH_TREND_SUMMARY_CHANGE
   );
 }
 
