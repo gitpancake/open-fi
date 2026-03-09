@@ -20,11 +20,9 @@ export async function POST(request: Request) {
     await session.save();
 
     return NextResponse.json({ success: true });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Login failed";
-    console.error("[login]", message);
+  } catch {
     return NextResponse.json(
-      { error: message },
+      { error: "Invalid credentials" },
       { status: 401 }
     );
   }
