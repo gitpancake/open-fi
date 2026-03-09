@@ -185,11 +185,16 @@ export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, ini
           <ChatPanel />
         </div>
 
-        {/* Desktop: 1/4 widgets | 1/4 widgets | 2/4 chat */}
+        {/* Desktop: 2/4 chat | 1/4 widgets | 1/4 widgets */}
         {pet && initialPetDetails ? (
           <>
+            {/* Chat panel — 2/4 */}
+            <div className="hidden min-h-0 flex-1 flex-col lg:flex">
+              <ChatPanel />
+            </div>
+
             {/* Widget column 1 */}
-            <div className="hidden min-h-0 w-1/4 flex-col gap-3 overflow-y-auto border-r border-border/50 p-3 lg:flex">
+            <div className="hidden min-h-0 w-1/4 flex-col gap-3 overflow-y-auto border-l border-border/50 p-3 lg:flex">
               <motion.div {...anim(0)}>
                 <PetProfileCard pet={pet} />
               </motion.div>
@@ -211,7 +216,7 @@ export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, ini
             </div>
 
             {/* Widget column 2 */}
-            <div className="hidden min-h-0 w-1/4 flex-col gap-3 overflow-y-auto border-r border-border/50 p-3 lg:flex">
+            <div className="hidden min-h-0 w-1/4 flex-col gap-3 overflow-y-auto border-l border-border/50 p-3 lg:flex">
               {deviceWithColors && (
                 <motion.div {...anim(0.05)}>
                   <DeviceStatusWidget device={deviceWithColors} petId={pet.id} />
@@ -228,11 +233,6 @@ export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, ini
               <motion.div {...anim(0.2)}>
                 <TimelineWidget initialFeed={initialTimeline} />
               </motion.div>
-            </div>
-
-            {/* Chat panel — 2/4 */}
-            <div className="hidden min-h-0 flex-1 flex-col lg:flex">
-              <ChatPanel />
             </div>
           </>
         ) : (
