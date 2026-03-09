@@ -340,3 +340,42 @@ export interface FiHealthTrendsResponse {
   genericTrends: FiHealthTrend[];
   behaviorTrends: FiHealthTrend[];
 }
+
+// Pack Rankings types
+
+export interface FiPackRankingChange {
+  __typename: string;
+  amount: number;
+}
+
+export interface FiPackRanking {
+  __typename: string;
+  isPending: boolean;
+  stepCount: number;
+  rankNumber: number;
+  rankPercentile: number;
+  rankChange: FiPackRankingChange | null;
+}
+
+export interface FiPackAvatar {
+  __typename: string;
+  image?: { fullSize: string };
+  abbreviation?: string;
+}
+
+export interface FiPack {
+  __typename: string;
+  id: string;
+  name: string;
+  avatar: FiPackAvatar;
+  actingPetIsMember: boolean;
+  all: FiPackRanking | null;
+  puppies: FiPackRanking | null;
+  adults: FiPackRanking | null;
+  seniors: FiPackRanking | null;
+  category: string;
+  totalRankedPets: number;
+  ageFiltersWithEnoughRankedPets: string[];
+  totalRankedSteps: number;
+  highlightColorHex: string | null;
+}

@@ -11,6 +11,8 @@ import {
   buildUpdateDeviceOpsMutation,
   buildTimelineQuery,
   buildHealthTrendsQuery,
+  buildPetCollarStateQuery,
+  buildRankingsPackFeedQuery,
 } from "./queries.js";
 import type {
   HouseholdsResponse,
@@ -179,6 +181,28 @@ export async function getHealthTrends(
     };
   }>(creds, query, { petId, period });
   return res.data.getPetHealthTrendsForPet;
+}
+
+export async function getPetCollarState(
+  creds: FiCredentials,
+  petId: string
+) {
+  const query = buildPetCollarStateQuery();
+  const res = await fiQuery<{
+    data: { pet: { petCollarState: unknown } };
+  }>(creds, query, { petId });
+  return res.data.pet.petCollarState;
+}
+
+export async function getRankingsPackFeed(
+  creds: FiCredentials,
+  petId: string
+) {
+  const query = buildRankingsPackFeedQuery();
+  const res = await fiQuery<{
+    data: { pet: { packFeed: { rankingsPacks: unknown[] } } };
+  }>(creds, query, { petId, isUserPet: true });
+  return res.data.pet.packFeed.rankingsPacks;
 }
 
 export async function setLostDogMode(

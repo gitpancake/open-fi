@@ -11,6 +11,8 @@ import {
   apiSetLostDogMode,
   apiGetTimeline,
   apiGetHealthTrends,
+  apiGetPetCollarState,
+  apiGetRankings,
   type FiCredentials,
 } from "~/lib/api-client";
 
@@ -400,6 +402,56 @@ export function createFiTools(creds: FiCredentials) {
           });
       },
     }),
+    get_collar_state: tool({
+      description:
+        "Get detailed collar state including connectivity type, ongoing activity, and lost dog mode status. More detailed than get_device_status. Use when asking about collar connection details or current activity from the collar's perspective.",
+      inputSchema: z.object({
+        petId: z.string().describe("The pet ID to get collar state for"),
+      }),
+      execute: async ({ petId }) => {
+        const data = await apiGetPetCollarState<Record<string, unknown>>(creds, petId);
+        return data;
+      },
+    }),
+
+    get_rankings: tool({
+      description:
+        "Get pack rankings/leaderboard data for a pet. Shows which packs the dog is in, their rank, step count, percentile, and rank changes. Use when the user asks about rankings, leaderboards, packs, or how their dog compares to others.",
+      inputSchema: z.object({
+        petId: z.string().describe("The pet ID to get rankings for"),
+      }),
+      execute: async ({ petId }) => {
+        interface PackRanking {
+          isPending: boolean;
+          stepCount: number;
+          rankNumber: number;
+          rankPercentile: number;
+          rankChange: { amount: number } | null;
+        }
+        interface Pack {
+          id: string;
+          name: string;
+          actingPetIsMember: boolean;
+          totalRankedPets: number;
+          highlightColorHex: string | null;
+          all: PackRanking | null;
+        }
+
+        const data = await apiGetRankings<{ packs: Pack[] }>(creds, petId);
+        return data.packs
+          .filter((p) => p.actingPetIsMember && p.all && !p.all.isPending)
+          .map((p) => ({
+            packName: p.name,
+            rank: p.all!.rankNumber,
+            totalPets: p.totalRankedPets,
+            percentile: Math.round(p.all!.rankPercentile * 100),
+            topPercent: 100 - Math.round(p.all!.rankPercentile * 100),
+            steps: p.all!.stepCount,
+            rankChange: p.all!.rankChange?.amount ?? 0,
+          }));
+      },
+    }),
+
     get_health_trends: tool({
       description:
         "Get health trend data for a pet showing activity, sleep, and behavior patterns over time. Returns trend charts and summary statistics with change indicators. Use when the user asks about trends, patterns, or how their dog's health/activity has been changing.",

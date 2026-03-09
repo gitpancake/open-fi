@@ -12,6 +12,8 @@ import {
   setLostDogMode,
   getTimeline,
   getHealthTrends,
+  getPetCollarState,
+  getRankingsPackFeed,
 } from "../client.js";
 import {
   PetsAndBasesSchema,
@@ -416,6 +418,58 @@ pets.openapi(healthTrendsRoute, async (c) => {
   const { period } = c.req.valid("query");
   const trends = await getHealthTrends(creds, c.req.valid("param").id, period ?? "DAY");
   return c.json(trends as any);
+});
+
+// --- GET /:id/collar-state ---
+const collarStateRoute = createRoute({
+  method: "get",
+  path: "/{id}/collar-state",
+  tags: ["Device"],
+  summary: "Get pet collar state",
+  description: "Returns detailed collar connectivity state, ongoing activity, and lost dog mode status.",
+  request: { params: PetIdParamSchema },
+  responses: {
+    200: {
+      content: { "application/json": { schema: z.object({}).passthrough() } },
+      description: "Collar state data",
+    },
+    401: {
+      content: { "application/json": { schema: ErrorSchema } },
+      description: "Missing Fi credentials",
+    },
+  },
+});
+
+pets.openapi(collarStateRoute, async (c) => {
+  const creds = c.get("creds");
+  const state = await getPetCollarState(creds, c.req.valid("param").id);
+  return c.json(state as any);
+});
+
+// --- GET /:id/rankings ---
+const rankingsRoute = createRoute({
+  method: "get",
+  path: "/{id}/rankings",
+  tags: ["Pets"],
+  summary: "Get pet pack rankings",
+  description: "Returns pack leaderboard data with step rankings, percentiles, and rank changes across breed/location packs.",
+  request: { params: PetIdParamSchema },
+  responses: {
+    200: {
+      content: { "application/json": { schema: z.object({}).passthrough() } },
+      description: "Pack rankings data",
+    },
+    401: {
+      content: { "application/json": { schema: ErrorSchema } },
+      description: "Missing Fi credentials",
+    },
+  },
+});
+
+pets.openapi(rankingsRoute, async (c) => {
+  const creds = c.get("creds");
+  const packs = await getRankingsPackFeed(creds, c.req.valid("param").id);
+  return c.json(packs as any);
 });
 
 export default pets;

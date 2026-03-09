@@ -164,6 +164,49 @@ export const FRAGMENT_HEALTH_TREND =
 export const QUERY_HEALTH_TRENDS =
   "query HealthTrends($petId: ID!, $period: PetHealthTrendPeriod!) { getPetHealthTrendsForPet(petId: $petId, period: $period) { __typename period genericTrends { __typename ...PetHealthTrendApiModel } behaviorTrends { __typename ...PetHealthTrendApiModel } } }";
 
+// --- PetCollarState query (reverse-engineered from Fi app via mitmproxy) ---
+
+export const FRAGMENT_REVERSE_GEOCODE_ADDRESS =
+  "fragment ReverseGeocodeAddress on ReverseGeocodeResult { __typename address neighborhood city state zipCode }";
+
+export const FRAGMENT_DOG_PARK_DETAILS =
+  "fragment DogParkDetails on DogPark { __typename id name position { __typename ...PositionCoordinates } boundary address { __typename ...ReverseGeocodeAddress } }";
+
+export const FRAGMENT_COLLAR_ONGOING_ACTIVITY =
+  "fragment OngoingActivityCollarDetails on OngoingActivity { __typename start presentUserString areaName cityState lastReportTimestamp totalSteps shouldShowDuration ... on OngoingWalk { __typename distance positions { __typename ...LocationPoint } path { __typename ...PositionCoordinates } } ... on OngoingRest { __typename location { __typename ...LocationPoint } place { __typename ...PlaceDetails } } }";
+
+export const FRAGMENT_ONLINE_CONNECTION_STATE =
+  "fragment OnlineConnectionStateDetails on OnlineConnectionState { __typename ... on ConnectedToUser { __typename user { __typename id firstName } } ... on ConnectedToBase { __typename chargingBase { __typename id name } } ... on ConnectedToCellular { __typename signalStrengthPercent } ... on ConnectedToWifi { __typename ssid } }";
+
+export const FRAGMENT_COLLAR_STATUS =
+  "fragment CollarStatusDetails on CollarStatus { __typename ... on OnlineCollarStatus { __typename state { __typename ...OnlineConnectionStateDetails } } ... on OfflineCollarStatus { __typename outOfBattery offlineDuration } }";
+
+export const FRAGMENT_HAS_COLLAR_STATE =
+  "fragment HasCollarStateDetails on HasReportsState { __typename collarStatus { __typename ...CollarStatusDetails } ongoingActivity { __typename ...OngoingActivityCollarDetails } ldmState }";
+
+export const FRAGMENT_NEEDS_COLLAR_STATE =
+  "fragment NeedsCollarStateDetails on NeedsReportsState { __typename needsCollar needsReports }";
+
+export const FRAGMENT_PET_COLLAR_STATE =
+  "fragment PetCollarStateDetails on PetCollarState { __typename timestamp ... on NeedsReportsState { __typename ...NeedsCollarStateDetails } ... on HasReportsState { __typename ...HasCollarStateDetails } }";
+
+export const QUERY_PET_COLLAR_STATE =
+  "query PetCollarState($petId: ID!) { pet(id: $petId) { __typename petCollarState { __typename ...PetCollarStateDetails } } }";
+
+// --- RankingsPackFeed query (reverse-engineered from Fi app via mitmproxy) ---
+
+export const FRAGMENT_PACK_RANKING =
+  "fragment PackRankingApiModel on PackRanking { __typename isPending stepCount rankNumber rankPercentile rankChange { __typename amount } }";
+
+export const FRAGMENT_PACK_AVATAR =
+  "fragment RankingsPackAvatarApiModel on PackAvatar { __typename ... on AvatarImage { __typename image { __typename fullSize } } ... on AvatarAbbreviation { __typename abbreviation } }";
+
+export const FRAGMENT_RANKINGS_PACK =
+  `fragment RankingsPackApiModel on Pack { __typename id name avatar { __typename ...RankingsPackAvatarApiModel } actingPetCanJoin actingPetCanLeave actingPetIsMember actingPetCannotJoinReason all: petRanking(petId: $petId) { __typename ...PackRankingApiModel } puppies: petRanking(petId: $petId, packAgeFilter: PUPPY) { __typename ...PackRankingApiModel } adults: petRanking(petId: $petId, packAgeFilter: ADULT) { __typename ...PackRankingApiModel } seniors: petRanking(petId: $petId, packAgeFilter: SENIOR) { __typename ...PackRankingApiModel } category totalRankedPets ageFiltersWithEnoughRankedPets totalRankedSteps highlightColorHex }`;
+
+export const QUERY_RANKINGS_PACK_FEED =
+  "query RankingsPackFeed($petId: ID!, $isUserPet: Boolean!) { pet(id: $petId) @include(if: $isUserPet) { __typename packFeed { __typename rankingsPacks: packs { __typename ...RankingsPackApiModel } } } }";
+
 // --- Mutations ---
 
 export const MUTATION_SET_DEVICE_LED =
@@ -261,6 +304,32 @@ export function buildHealthTrendsQuery(): string {
     FRAGMENT_HEALTH_TREND +
     FRAGMENT_HEALTH_TREND_SUMMARY +
     FRAGMENT_HEALTH_TREND_SUMMARY_CHANGE
+  );
+}
+
+export function buildPetCollarStateQuery(): string {
+  return (
+    QUERY_PET_COLLAR_STATE +
+    FRAGMENT_PET_COLLAR_STATE +
+    FRAGMENT_NEEDS_COLLAR_STATE +
+    FRAGMENT_HAS_COLLAR_STATE +
+    FRAGMENT_COLLAR_STATUS +
+    FRAGMENT_ONLINE_CONNECTION_STATE +
+    FRAGMENT_COLLAR_ONGOING_ACTIVITY +
+    FRAGMENT_DOG_PARK_DETAILS +
+    FRAGMENT_REVERSE_GEOCODE_ADDRESS +
+    FRAGMENT_POSITION_COORDINATES +
+    FRAGMENT_LOCATION_POINT +
+    FRAGMENT_PLACE_DETAILS
+  );
+}
+
+export function buildRankingsPackFeedQuery(): string {
+  return (
+    QUERY_RANKINGS_PACK_FEED +
+    FRAGMENT_RANKINGS_PACK +
+    FRAGMENT_PACK_AVATAR +
+    FRAGMENT_PACK_RANKING
   );
 }
 

@@ -128,6 +128,20 @@ export async function apiGetHealthTrends<T>(
   return apiFetch<T>(`/pets/${petId}/health-trends?period=${encodeURIComponent(period)}`, creds);
 }
 
+export async function apiGetPetCollarState<T>(
+  creds: FiCredentials,
+  petId: string
+): Promise<T> {
+  return apiFetch<T>(`/pets/${petId}/collar-state`, creds);
+}
+
+export async function apiGetRankings<T>(
+  creds: FiCredentials,
+  petId: string
+): Promise<T> {
+  return apiFetch<T>(`/pets/${petId}/rankings`, creds);
+}
+
 export async function apiSetLostDogMode<T>(
   creds: FiCredentials,
   petId: string,

@@ -20,7 +20,8 @@ import {
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { LogOut, PanelRight } from "lucide-react";
-import type { FiPet, FiBase, FiTimelineFeed, FiHealthTrendsResponse } from "~/types/fi";
+import { RankingsWidget } from "~/components/rankings-widget";
+import type { FiPet, FiBase, FiTimelineFeed, FiHealthTrendsResponse, FiPack } from "~/types/fi";
 import type { PetAllInfoResponse } from "~/types/fi";
 
 interface DashboardProps {
@@ -29,10 +30,11 @@ interface DashboardProps {
   initialPetDetails: PetAllInfoResponse["data"]["pet"] | null;
   initialTimeline: FiTimelineFeed | null;
   initialHealthTrends: FiHealthTrendsResponse | null;
+  initialRankings: FiPack[];
   userEmail: string;
 }
 
-export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, initialHealthTrends, userEmail }: DashboardProps) {
+export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, initialHealthTrends, initialRankings, userEmail }: DashboardProps) {
   const router = useRouter();
   const pet = pets[0] ?? null;
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -108,6 +110,11 @@ export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, ini
             <Wrapper {...getProps(0.5)}>
               <HealthTrendsWidget petId={pet.id} initialTrends={initialHealthTrends} />
             </Wrapper>
+            {initialRankings.length > 0 && (
+              <Wrapper {...getProps(0.55)}>
+                <RankingsWidget packs={initialRankings} />
+              </Wrapper>
+            )}
             <Wrapper {...getProps(0.6)}>
               <TimelineWidget initialFeed={initialTimeline} />
             </Wrapper>
