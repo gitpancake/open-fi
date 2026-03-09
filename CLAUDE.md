@@ -28,6 +28,10 @@ cd packages/web && pnpm dev    # Web only
 - **Device controls** — LED color, LED toggle, Lost Dog Mode via mutations
 - **OpenAPI docs** — `@hono/zod-openapi` generates spec at `/doc`, Scalar UI at `/reference`
 - **Timeline** — reverse-engineered from Fi app via mitmproxy, cursor-based pagination
+- **Health Trends** — activity/sleep/behavior trends with sparkline graphs and period toggle (DAY/WEEK/MONTH)
+- **Pack Rankings** — leaderboard data from RankingsPackFeed query
+- **Collar State** — detailed collar connectivity query (unused in dashboard, available via API)
+- **Mitmproxy captures** — stored in gitignored `requests/` folder
 
 ## Data Flow
 
@@ -39,21 +43,23 @@ User -> Next.js (3000) -> /api/chat -> Claude (tool calling)
 ## Important Files
 
 ### API (`packages/api/src/`)
-- `client.ts` — `FiCredentials` interface, `fiQuery()` GraphQL wrapper, all pet data functions + `getTimeline()`
-- `queries.ts` — GraphQL query strings + fragment strings from pytryfi + timeline query (mitmproxy). `buildHouseholdsQuery()`, `buildPetLocationQuery(petId)`, `buildTimelineQuery()`, etc.
+- `client.ts` — `FiCredentials` interface, `fiQuery()` GraphQL wrapper, all pet data functions + `getTimeline()`, `getHealthTrends()`, `getPetCollarState()`, `getRankingsPackFeed()`
+- `queries.ts` — GraphQL query strings + fragment strings from pytryfi + mitmproxy captures. `buildHouseholdsQuery()`, `buildPetLocationQuery(petId)`, `buildTimelineQuery()`, `buildHealthTrendsQuery()`, `buildPetCollarStateQuery()`, `buildRankingsPackFeedQuery()`, etc.
 - `schemas.ts` — Zod schemas for OpenAPI request/response validation
 - `routes/auth.ts` — `POST /auth/login` proxies to TryFi (OpenAPIHono)
-- `routes/pets.ts` — REST endpoints wrapping client functions (OpenAPIHono), includes `/timeline`
+- `routes/pets.ts` — REST endpoints wrapping client functions (OpenAPIHono), includes `/timeline`, `/health-trends`, `/collar-state`, `/rankings`
 - `index.ts` — OpenAPIHono app entry, CORS config, `/doc` + `/reference` endpoints, port 3001
 
 ### Web (`packages/web/src/`)
-- `lib/api-client.ts` — typed fetch wrapper for fi-open-api (`apiGetPets`, `apiGetPetLocation`, `apiGetTimeline`, etc.)
-- `lib/ai-tools.ts` — 9 Claude tool definitions using Vercel AI SDK `tool()` with `inputSchema` (Zod)
+- `lib/api-client.ts` — typed fetch wrapper for fi-open-api (`apiGetPets`, `apiGetPetLocation`, `apiGetTimeline`, `apiGetHealthTrends`, `apiGetPetCollarState`, `apiGetRankings`, etc.)
+- `lib/ai-tools.ts` — 12 Claude tool definitions using Vercel AI SDK `tool()` with `inputSchema` (Zod)
 - `lib/session.ts` — iron-session config, `getServerSession()` helper
 - `app/api/chat/route.ts` — streaming chat endpoint using Claude Haiku with tools
 - `app/dashboard/page.tsx` — SSR page that fetches initial pet data
-- `components/dashboard.tsx` — two-panel layout (chat left, widgets right), mobile sheet
+- `components/dashboard.tsx` — desktop: chat (50%) + two widget columns (25% each), mobile: full chat + sheet drawer
 - `components/timeline-widget.tsx` — activity timeline with diceui, client-side pagination
+- `components/health-trends-widget.tsx` — sparkline charts, segment bars, day/week/month toggle
+- `components/rankings-widget.tsx` — pack leaderboard with rank, percentile bars, rank changes
 - `components/chat-panel.tsx` — `useChat()` hook, manual input state, `sendMessage({ text })` pattern
 
 ## AI SDK v6 Gotchas
@@ -79,5 +85,6 @@ Only in `packages/web/.env.local`:
 - GraphQL: `POST https://api.tryfi.com/graphql` with JSON `{ query }` + cookie header
 - Pet queries use `__PET_ID__` placeholder replaced at runtime
 - Timeline query uses GraphQL variables (`$pagingInstruction`, `$includeTravel`, `$filter`)
+- Health trends, collar state, and rankings queries use GraphQL variables (`$petId`, `$period`, `$isUserPet`)
 - Queries must include all required fragments concatenated into one string
-- Timeline query was reverse-engineered from the Fi iOS app via mitmproxy (not from pytryfi)
+- Timeline, health trends, collar state, and rankings queries were reverse-engineered from the Fi iOS app via mitmproxy (not from pytryfi)

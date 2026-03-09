@@ -12,6 +12,8 @@ Next.js frontend for open-fi. Features an AI chat interface powered by Claude th
 - **Lost Dog Mode** — Toggle to increase GPS tracking frequency when your dog is lost
 - **Base Stations** — Wi-Fi base station status (online/offline, network name)
 - **Activity Timeline** — Chronological feed of walks, rest, travel, play with pagination
+- **Health Trends** — Sparkline charts and segment bars for activity, sleep, behavior with day/week/month toggle
+- **Pack Rankings** — Leaderboard showing rank, percentile, step count, and rank changes across packs
 - **Chat History** — Persisted in localStorage across page reloads
 
 ## Usage
@@ -63,29 +65,31 @@ FI_API_URL=http://localhost:3001
 | `set_led_color` | Change the collar LED color by name |
 | `set_lost_mode` | Toggle Lost Dog Mode on/off |
 | `get_timeline` | Recent activity feed (walks, rest, travel, notifications) |
+| `get_health_trends` | Health trends with charts and summaries (day/week/month) |
+| `get_collar_state` | Detailed collar connectivity and ongoing activity |
+| `get_rankings` | Pack leaderboard rankings with percentiles and rank changes |
 
 ## Layout
 
 ```
 +--------------------------------------------------+
-|  open-fi                              [Logout]    |
-+------------------------+-------------------------+
-|                        |  Pet Profile Card        |
-|                        +-------------------------+
-|    Chat Panel          |  Activity Widget         |
-|                        +-------------------------+
-|  "Where is Luna?"      |  Location Widget         |
-|  "Luna is at home..."  +-------------------------+
-|                        |  Device Status           |
-|                        +-------------------------+
-|                        |  Base Stations           |
-|                        +-------------------------+
-|  [Ask about Luna...]   |  Timeline Feed           |
-+------------------------+-------------------------+
+|  open-fi  [Ziggy]           user@email  [Logout]  |
++-------------------------+-----------+-------------+
+|                         | Profile   | Device      |
+|    Chat Panel           +-----------+-------------+
+|    (50%)                | Activity  | Base Stn    |
+|                         +-----------+-------------+
+|  "Where is Luna?"       | Health    | Rankings    |
+|  "Luna is at home..."   | Trends    +-------------+
+|                         +-----------+ Timeline    |
+|                         | Location  |             |
+|  [Ask about Luna...]    |           |             |
++-------------------------+-----------+-------------+
 ```
 
-- Left panel (60%): Chat with streaming responses
-- Right panel (40%): Persistent widgets (hidden on mobile, accessible via sheet)
+- Left half (50%): Chat with streaming responses
+- Right half: Two scrollable widget columns (25% each)
+- Mobile: Full chat + sheet drawer for widgets
 
 ## Stack
 
@@ -112,19 +116,22 @@ src/
 │       ├── auth/logout/route.ts  # Clear session
 │       ├── chat/route.ts         # AI streaming chat
 │       ├── timeline/route.ts     # Timeline pagination proxy
+│       ├── health-trends/[petId]/route.ts  # Health trends period switching
 │       └── device/[petId]/
 │           ├── led/             # PUT — change collar LED color
 │           ├── led-toggle/      # PUT — toggle LED on/off
 │           └── lost-mode/       # PUT — toggle Lost Dog Mode
 ├── components/
-│   ├── dashboard.tsx             # Two-panel layout
+│   ├── dashboard.tsx             # Bento layout (chat + 2 widget columns)
 │   ├── chat-panel.tsx            # Chat UI (useChat hook)
 │   ├── chat-message.tsx          # Message bubbles
 │   ├── pet-profile-card.tsx      # Dog profile
 │   ├── activity-widget.tsx       # Step stats
-│   ├── location-widget.tsx       # Map embed
+│   ├── location-widget.tsx       # Map embed (compact mode for bento)
 │   ├── device-status-widget.tsx  # Collar status + battery + lost mode
 │   ├── base-stations-widget.tsx  # Wi-Fi base stations
+│   ├── health-trends-widget.tsx  # Sparkline charts + period toggle
+│   ├── rankings-widget.tsx       # Pack leaderboards
 │   ├── timeline-widget.tsx       # Activity timeline feed
 │   ├── login-form.tsx            # Login form
 │   └── ui/                       # shadcn primitives
