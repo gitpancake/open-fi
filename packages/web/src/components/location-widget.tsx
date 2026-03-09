@@ -5,9 +5,10 @@ import type { FiOngoingActivity } from "~/types/fi";
 
 interface LocationWidgetProps {
   activity: FiOngoingActivity | null;
+  compact?: boolean;
 }
 
-export function LocationWidget({ activity }: LocationWidgetProps) {
+export function LocationWidget({ activity, compact }: LocationWidgetProps) {
   if (!activity) {
     return (
       <Card>
@@ -59,7 +60,7 @@ export function LocationWidget({ activity }: LocationWidgetProps) {
           <div className="overflow-hidden rounded-xl ring-1 ring-border">
             <iframe
               src={mapSrc}
-              className="h-[180px] w-full border-0"
+              className={`w-full border-0 ${compact ? "h-[100px]" : "h-[180px]"}`}
               title="Pet location"
             />
           </div>

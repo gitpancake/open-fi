@@ -98,78 +98,11 @@ export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, ini
     );
   }
 
-  // Desktop bento grid — animated entrance
-  function renderDesktopGrid() {
-    if (!pet) {
-      return (
-        <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-          No pets found. Make sure your Fi collar is set up.
-        </div>
-      );
-    }
-
-    const item = (delay: number, className: string, children: React.ReactNode) => (
-      <motion.div
-        className={className}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay }}
-      >
-        {children}
-      </motion.div>
-    );
-
-    return (
-      <div className="grid h-full auto-rows-min grid-cols-3 gap-3 overflow-y-auto p-4 xl:grid-cols-4">
-        {/* Row 1: Profile, Activity, Device */}
-        {item(0, "col-span-1", <PetProfileCard pet={pet} />)}
-
-        {initialPetDetails ? (
-          <>
-            {item(0.05, "col-span-1", (
-              <ActivityWidget
-                daily={initialPetDetails.dailyStepStat}
-                weekly={initialPetDetails.weeklyStepStat}
-                monthly={initialPetDetails.monthlyStepStat}
-              />
-            ))}
-            {item(0.1, "col-span-1 row-span-2", (
-              <div className="h-full [&>div]:h-full">
-                {deviceWithColors && (
-                  <DeviceStatusWidget device={deviceWithColors} petId={pet.id} />
-                )}
-              </div>
-            ))}
-
-            {/* Chat on xl screens takes the 4th column, spanning all rows */}
-            <motion.div
-              className="col-span-3 row-span-5 hidden min-h-0 xl:col-span-1 xl:col-start-4 xl:row-start-1 xl:flex xl:flex-col"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="flex min-h-0 flex-1 flex-col rounded-xl ring-1 ring-foreground/10 overflow-hidden">
-                <ChatPanel />
-              </div>
-            </motion.div>
-
-            {/* Row 2: Location (wide), Base Stations */}
-            {item(0.15, "col-span-2", <LocationWidget activity={initialPetDetails.ongoingActivity} />)}
-            {bases.length > 0 && item(0.2, "col-span-1", <BaseStationsWidget bases={bases} />)}
-
-            {/* Row 3: Health Trends, Rankings, Timeline */}
-            {item(0.25, "col-span-1", <HealthTrendsWidget petId={pet.id} initialTrends={initialHealthTrends} />)}
-            {initialRankings.length > 0 && item(0.3, "col-span-1", <RankingsWidget packs={initialRankings} />)}
-            {item(0.35, "col-span-1 row-span-2", (
-              <div className="h-full [&>div]:h-full">
-                <TimelineWidget initialFeed={initialTimeline} />
-              </div>
-            ))}
-          </>
-        ) : null}
-      </div>
-    );
-  }
+  const anim = (delay: number) => ({
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.3, delay },
+  });
 
   return (
     <div className="flex h-dvh flex-col bg-background">
@@ -252,19 +185,62 @@ export function Dashboard({ pets, bases, initialPetDetails, initialTimeline, ini
           <ChatPanel />
         </div>
 
-        {/* Desktop: bento grid with chat alongside on xl */}
-        <div className="hidden min-h-0 flex-1 lg:flex lg:flex-col">
-          {/* On lg (not xl): show chat + grid side by side */}
-          <div className="flex min-h-0 flex-1">
-            <div className="min-h-0 flex-1">
-              {renderDesktopGrid()}
+        {/* Desktop: 1/4 widgets | 1/4 widgets | 2/4 chat */}
+        {pet && initialPetDetails ? (
+          <>
+            {/* Widget column 1 */}
+            <div className="hidden min-h-0 w-1/4 flex-col gap-3 overflow-y-auto border-r border-border/50 p-3 lg:flex">
+              <motion.div {...anim(0)}>
+                <PetProfileCard pet={pet} />
+              </motion.div>
+              <motion.div {...anim(0.05)}>
+                <ActivityWidget
+                  daily={initialPetDetails.dailyStepStat}
+                  weekly={initialPetDetails.weeklyStepStat}
+                  monthly={initialPetDetails.monthlyStepStat}
+                />
+              </motion.div>
+              <motion.div {...anim(0.1)}>
+                <LocationWidget activity={initialPetDetails.ongoingActivity} compact />
+              </motion.div>
+              {bases.length > 0 && (
+                <motion.div {...anim(0.15)}>
+                  <BaseStationsWidget bases={bases} />
+                </motion.div>
+              )}
             </div>
-            {/* Chat panel for lg screens (not xl, where it's in the grid) */}
-            <div className="flex w-[380px] flex-col border-l border-border/50 xl:hidden">
+
+            {/* Widget column 2 */}
+            <div className="hidden min-h-0 w-1/4 flex-col gap-3 overflow-y-auto border-r border-border/50 p-3 lg:flex">
+              {deviceWithColors && (
+                <motion.div {...anim(0.05)}>
+                  <DeviceStatusWidget device={deviceWithColors} petId={pet.id} />
+                </motion.div>
+              )}
+              <motion.div {...anim(0.1)}>
+                <HealthTrendsWidget petId={pet.id} initialTrends={initialHealthTrends} />
+              </motion.div>
+              {initialRankings?.length > 0 && (
+                <motion.div {...anim(0.15)}>
+                  <RankingsWidget packs={initialRankings} />
+                </motion.div>
+              )}
+              <motion.div {...anim(0.2)}>
+                <TimelineWidget initialFeed={initialTimeline} />
+              </motion.div>
+            </div>
+
+            {/* Chat panel — 2/4 */}
+            <div className="hidden min-h-0 flex-1 flex-col lg:flex">
               <ChatPanel />
             </div>
+          </>
+        ) : (
+          /* Desktop fallback: full chat when no pet data */
+          <div className="hidden min-h-0 flex-1 flex-col lg:flex">
+            <ChatPanel />
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
