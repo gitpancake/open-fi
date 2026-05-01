@@ -6,9 +6,9 @@ Standalone REST microservice wrapping the undocumented [TryFi](https://tryfi.com
 
 ### Auth
 
-| Method | Path | Body | Response |
+| Method | Path | Headers | Response |
 |---|---|---|---|
-| POST | `/auth/login` | `{ email, password }` | `{ userId, sessionId, fiCookies }` |
+| POST | `/auth/login` | `X-Fi-Email`, `X-Fi-Password` | `{ userId, sessionId, fiCookies }` |
 
 ### Pets
 
@@ -64,8 +64,8 @@ pnpm start
 ```bash
 # Login
 curl -X POST http://localhost:3001/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"you@example.com","password":"..."}'
+  -H "X-Fi-Email: you@example.com" \
+  -H "X-Fi-Password: ..."
 
 # Get pets (use fiCookies from login response)
 curl http://localhost:3001/pets \

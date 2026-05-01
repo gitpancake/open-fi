@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { API_HOST, API_LOGIN } from "../queries.js";
-import { LoginBodySchema, LoginResponseSchema, ErrorSchema } from "../schemas.js";
+import { LoginHeadersSchema, LoginResponseSchema, ErrorSchema } from "../schemas.js";
 
 const auth = new OpenAPIHono();
 
@@ -9,12 +9,10 @@ const loginRoute = createRoute({
   path: "/login",
   tags: ["Auth"],
   summary: "Login with Fi credentials",
-  description: "Authenticate with TryFi email and password. Returns session cookies needed for all pet endpoints.",
+  description:
+    "Authenticate with TryFi email and password supplied via X-Fi-Email and X-Fi-Password headers. Returns session cookies needed for all pet endpoints.",
   request: {
-    body: {
-      content: { "application/json": { schema: LoginBodySchema } },
-      required: true,
-    },
+    headers: LoginHeadersSchema,
   },
   responses: {
     200: {
@@ -29,7 +27,9 @@ const loginRoute = createRoute({
 });
 
 auth.openapi(loginRoute, async (c) => {
-  const { email, password } = c.req.valid("json");
+  const headers = c.req.valid("header");
+  const email = headers["x-fi-email"];
+  const password = headers["x-fi-password"];
 
   const fiResponse = await fetch(API_HOST + API_LOGIN, {
     method: "POST",
@@ -51,7 +51,6 @@ auth.openapi(loginRoute, async (c) => {
     return c.json({ error: data.error.message || "Login failed" }, 401);
   }
 
-  // Extract cookie name=value pairs from Set-Cookie headers
   const setCookieHeaders = fiResponse.headers.getSetCookie();
   const cookiePairs = setCookieHeaders
     .map((h: string) => h.split(";")[0])

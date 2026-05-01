@@ -8,10 +8,10 @@ export const ErrorSchema = z.object({
 
 // --- Auth schemas ---
 
-export const LoginBodySchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-}).openapi("LoginBody");
+export const LoginHeadersSchema = z.object({
+  "x-fi-email": z.string().email(),
+  "x-fi-password": z.string().min(1),
+}).openapi("LoginHeaders");
 
 export const LoginResponseSchema = z.object({
   userId: z.string(),

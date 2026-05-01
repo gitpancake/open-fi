@@ -47,7 +47,10 @@ export async function apiLogin(
 ): Promise<LoginResult> {
   return apiFetch<LoginResult>("/auth/login", undefined, {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    headers: {
+      "X-Fi-Email": email,
+      "X-Fi-Password": password,
+    },
   });
 }
 
